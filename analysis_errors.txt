@@ -1,0 +1,12 @@
+Analyzing 4 items...                                            
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\auth\mfa_enrollment_page.dart:123:50 - deprecated_member_use
+  error - Undefined name 'PhoneMultiFactorAssertion' - lib\services\mfa_service.dart:31:9 - undefined_identifier
+  error - The argument type 'Future<MultiFactorAssertion>' can't be assigned to the parameter type 'MultiFactorAssertion'.  - lib\services\mfa_service.dart:45:9 - argument_type_not_assignable
+  error - The getter 'enrolledFactors' isn't defined for the type 'MultiFactor' - lib\services\mfa_service.dart:58:29 - undefined_getter
+  error - The getter 'enrolledFactors' isn't defined for the type 'MultiFactor' - lib\services\mfa_service.dart:66:38 - undefined_getter
+  error - The named parameter 'factorId' isn't defined - lib\services\mfa_service.dart:68:39 - undefined_named_parameter
+  error - The getter 'factorId' isn't defined for the type 'TotpMultiFactorGenerator' - lib\services\mfa_service.dart:78:51 - undefined_getter
+  error - The argument type 'Future<MultiFactorAssertion>' can't be assigned to the parameter type 'MultiFactorAssertion'.  - lib\services\mfa_service.dart:84:43 - argument_type_not_assignable
+
+8 issues found. (ran in 3.5s)

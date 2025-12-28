@@ -1,0 +1,117 @@
+{
+  "rules": {
+    "user_lookup": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "users": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".indexOn": [
+        "phone",
+        "email"
+      ],
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "!data.exists() || (auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin'))"
+      }
+    },
+    "user_devices": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "products": {
+      ".read": true,
+      ".indexOn": [
+        "category",
+        "sellerId",
+        "createdAt",
+        "price"
+      ],
+      "$productId": {
+        ".write": "auth != null && ((!data.exists() && newData.child('sellerId').val() === auth.uid) || (data.exists() && (data.child('sellerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')))"
+      }
+    },
+    "reviews": {
+      ".read": true,
+      "$productId": {
+        "$reviewUserId": {
+          ".write": "auth != null && (auth.uid == $reviewUserId || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+        }
+      }
+    },
+    "chats": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "lastMessageTime",
+        "user1Id",
+        "user2Id",
+        "lastMessage/timestamp"
+      ]
+    },
+    "messages": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$chatId": {
+        ".indexOn": [
+          "timestamp",
+          "senderId"
+        ]
+      }
+    },
+    "orders": {
+      ".indexOn": [
+        "buyerId",
+        "sellerId",
+        "status",
+        "createdAt"
+      ],
+      "$orderId": {
+        ".read": "auth != null && (data.child('buyerId').val() === auth.uid || data.child('sellerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && ((!data.exists() && newData.child('buyerId').val() === auth.uid) || (data.exists() && (data.child('buyerId').val() === auth.uid || data.child('sellerId').val() === auth.uid)) || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    },
+    "favorites": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "carts": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "swap_requests": {
+      ".indexOn": [
+        "requesterId",
+        "targetOwnerId",
+        "status",
+        "createdAt"
+      ],
+      "$swapId": {
+        ".read": "auth != null && (data.child('requesterId').val() === auth.uid || data.child('targetOwnerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && ((!data.exists() && newData.child('requesterId').val() === auth.uid) || (data.exists() && (data.child('requesterId').val() === auth.uid || data.child('targetOwnerId').val() === auth.uid)) || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    },
+    "user_chats": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null"
+      }
+    },
+    "notifications": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null"
+      }
+    },
+    "categories": {
+      ".read": true,
+      ".write": "auth != null"
+    }
+  }
+}

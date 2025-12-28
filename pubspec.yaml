@@ -1,0 +1,53 @@
+name: redsea
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+
+  sdk: ">=3.1.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # إصدارات Firebase المتوافقة
+  firebase_core: ^2.24.0
+  firebase_auth: ^4.18.1
+  firebase_messaging: ^14.9.4
+  firebase_database: ^10.3.7
+  cloud_functions: ^4.5.8
+  #firebase_storage: ^11.5.0
+  http: ^1.1.0
+  image_picker: ^1.1.2
+  intl: ^0.18.1
+  get: ^4.6.6
+  shared_preferences: ^2.5.4
+  
+  # مكتبات تصدير التقارير
+  pdf: ^3.10.8
+  excel: ^4.0.2
+  path_provider: ^2.1.2
+  open_filex: ^4.3.4
+  
+  # مكتبة التشفير
+  # مكتبة التشفير
+  encrypt: ^5.0.3
+
+  # مسح وفحص QR
+  qr_flutter: ^4.1.0
+
+  # مكتبة التحقق بخطوتين TOTP
+  otp: ^3.1.4
+  mailer: ^6.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.1
+
+flutter:
+  uses-material-design: true
