@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:redsea/app/routes/app_routes.dart';
+import 'package:redsea/app/core/app_theme.dart';
 import 'dart:convert';
 
 class SignUpPage extends StatefulWidget {
@@ -38,20 +39,20 @@ class _SignUpPageState extends State<SignUpPage> {
         lastName.isEmpty ||
         phone.isEmpty ||
         password.isEmpty) {
-      Get.snackbar('خطأ', 'يرجى ملء جميع الحقول',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('تنبيه', 'يرجى ملء جميع الحقول',
+          backgroundColor: AppColors.primaryDark, colorText: Colors.white);
       return;
     }
 
     if (phone.length < 8) {
-      Get.snackbar('خطأ', 'رقم الهاتف يجب أن يكون 8 أرقام على الأقل',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('تنبيه', 'رقم الهاتف يجب أن يكون 8 أرقام على الأقل',
+          backgroundColor: AppColors.primaryDark, colorText: Colors.white);
       return;
     }
 
     if (password.length < 6) {
-      Get.snackbar('خطأ', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('تنبيه', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
+          backgroundColor: AppColors.primaryDark, colorText: Colors.white);
       return;
     }
 
@@ -62,8 +63,8 @@ class _SignUpPageState extends State<SignUpPage> {
       DataSnapshot lookupSnapshot = await _userLookupRef.child(phone).get();
 
       if (lookupSnapshot.exists) {
-        Get.snackbar('خطأ', 'رقم الهاتف مستخدم مسبقًا',
-            backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar('تنبيه', 'رقم الهاتف مستخدم مسبقًا',
+            backgroundColor: AppColors.primaryDark, colorText: Colors.white);
         setState(() => _loading = false);
         return;
       }
@@ -97,8 +98,8 @@ class _SignUpPageState extends State<SignUpPage> {
         'uid': userCredential.user!.uid,
       });
 
-      Get.snackbar('نجاح', 'تم إنشاء الحساب بنجاح ✅',
-          backgroundColor: Colors.green, colorText: Colors.white);
+      Get.snackbar('نجاح', 'تم إنشاء الحساب بنجاح ✓',
+          backgroundColor: AppColors.primary, colorText: Colors.white);
       Get.offAllNamed(AppRoutes.home);
     } on FirebaseAuthException catch (e) {
       String msg = 'حدث خطأ أثناء التسجيل.';
@@ -107,11 +108,11 @@ class _SignUpPageState extends State<SignUpPage> {
       } else if (e.code == 'weak-password') {
         msg = 'كلمة المرور ضعيفة.';
       }
-      Get.snackbar('خطأ', msg,
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('تنبيه', msg,
+          backgroundColor: AppColors.primaryDark, colorText: Colors.white);
     } catch (e) {
-      Get.snackbar('خطأ', 'خطأ غير متوقع: $e',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('تنبيه', 'خطأ غير متوقع: $e',
+          backgroundColor: AppColors.primaryDark, colorText: Colors.white);
     } finally {
       setState(() => _loading = false);
     }
@@ -137,8 +138,8 @@ class _SignUpPageState extends State<SignUpPage> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.red.shade700,
-                        Colors.blue.shade900,
+                        AppColors.primary,
+                        AppColors.primaryDark,
                       ],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
@@ -160,11 +161,11 @@ class _SignUpPageState extends State<SignUpPage> {
                           style: TextStyle(
                             fontSize: 36,
                             fontWeight: FontWeight.bold,
-                            color: Colors.red,
+                            color: Colors.white,
                             shadows: [
                               Shadow(
                                 blurRadius: 10,
-                                color: Colors.redAccent,
+                                color: AppColors.primaryLight,
                                 offset: Offset(2, 2),
                               ),
                             ],

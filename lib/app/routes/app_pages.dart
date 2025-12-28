@@ -2,13 +2,21 @@ import 'package:get/get.dart';
 import 'package:redsea/app/routes/app_routes.dart';
 
 // Bindings
-
 import 'package:redsea/app/bindings/home_binding.dart';
 import 'package:redsea/app/bindings/auth_binding.dart';
 import 'package:redsea/app/bindings/chat_binding.dart';
 import 'package:redsea/app/bindings/swap_binding.dart';
-// Note: profile_binding, notifications_binding, orders_binding, chat_binding
-// available for use when needed in GetPage definitions
+import 'package:redsea/app/bindings/admin_binding.dart';
+import 'package:redsea/app/bindings/search_binding.dart';
+import 'package:redsea/app/bindings/favorites_binding.dart';
+import 'package:redsea/app/bindings/product_binding.dart';
+import 'package:redsea/app/bindings/basket_binding.dart';
+import 'package:redsea/app/bindings/payment_binding.dart';
+import 'package:redsea/app/bindings/settings_binding.dart';
+import 'package:redsea/app/bindings/categories_binding.dart';
+import 'package:redsea/app/bindings/profile_binding.dart';
+import 'package:redsea/app/bindings/notifications_binding.dart';
+import 'package:redsea/app/bindings/orders_binding.dart';
 
 // Views
 import 'package:redsea/firstpage.dart';
@@ -27,19 +35,32 @@ import 'package:redsea/my_products_page.dart';
 import 'package:redsea/orders_page.dart';
 import 'package:redsea/notifications_page.dart';
 import 'package:redsea/categories_page.dart';
+import 'package:redsea/search_page.dart';
+import 'package:redsea/favorites_page.dart';
 import 'package:redsea/swap_selection_page.dart';
 import 'package:redsea/swap_requests_page.dart';
+import 'package:redsea/admin/admin_dashboard_page.dart';
+import 'package:redsea/admin/fix_products_page.dart';
+import 'package:redsea/auth/mfa_enrollment_page.dart';
+import 'package:redsea/auth/mfa_verification_page.dart';
 
 /// تعريف صفحات التطبيق مع الـ Bindings
 abstract class AppPages {
   static final pages = [
-    // الصفحة الأولى
+    // ═══════════════════════════════════════════════════════════════
+    // الصفحات الأساسية
+    // ═══════════════════════════════════════════════════════════════
+
+    // الصفحة الأولى (الترحيب)
     GetPage(
       name: AppRoutes.first,
       page: () => const Firstpage(),
     ),
 
+    // ═══════════════════════════════════════════════════════════════
     // صفحات المصادقة
+    // ═══════════════════════════════════════════════════════════════
+
     GetPage(
       name: AppRoutes.login,
       page: () => const LoginPage(),
@@ -50,15 +71,35 @@ abstract class AppPages {
       page: () => const SignUpPage(),
       binding: AuthBinding(),
     ),
+    GetPage(
+      name: AppRoutes.mfaEnrollment,
+      page: () => const MfaEnrollmentPage(),
+      binding: AuthBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.mfaVerification,
+      page: () => MfaVerificationPage(
+        userId: Get.arguments?['userId'] ?? '',
+        email: Get.arguments?['email'] ?? '',
+        password: Get.arguments?['password'] ?? '',
+      ),
+      binding: AuthBinding(),
+    ),
 
+    // ═══════════════════════════════════════════════════════════════
     // الصفحة الرئيسية
+    // ═══════════════════════════════════════════════════════════════
+
     GetPage(
       name: AppRoutes.home,
       page: () => const HomePage(),
       binding: HomeBinding(),
     ),
 
-    // صفحة تفاصيل المنتج
+    // ═══════════════════════════════════════════════════════════════
+    // صفحات المنتجات
+    // ═══════════════════════════════════════════════════════════════
+
     GetPage(
       name: AppRoutes.productDetails,
       page: () => ProductDetailsPage(
@@ -68,39 +109,53 @@ abstract class AppPages {
         onRemoveFromCart: Get.arguments['onRemoveFromCart'],
         onUpdateQuantity: Get.arguments['onUpdateQuantity'],
       ),
+      binding: ProductBinding(),
     ),
-
-    // إضافة منتج
     GetPage(
       name: AppRoutes.addProduct,
       page: () => const AddProductPage(),
+      binding: ProductBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.myProducts,
+      page: () => const MyProductsPage(),
+      binding: ProductBinding(),
     ),
 
-    // السلة
+    // ═══════════════════════════════════════════════════════════════
+    // السلة والدفع
+    // ═══════════════════════════════════════════════════════════════
+
     GetPage(
       name: AppRoutes.basket,
       page: () => BasketPage(cartItems: Get.arguments ?? []),
+      binding: BasketBinding(),
     ),
-
-    // الدفع
     GetPage(
       name: AppRoutes.payment,
       page: () => PaymentMethodPage(cartItems: Get.arguments ?? []),
+      binding: PaymentBinding(),
     ),
 
-    // الملف الشخصي
+    // ═══════════════════════════════════════════════════════════════
+    // الملف الشخصي والإعدادات
+    // ═══════════════════════════════════════════════════════════════
+
     GetPage(
       name: AppRoutes.profile,
       page: () => const ProfilePage(),
+      binding: ProfileBinding(),
     ),
-
-    // الإعدادات
     GetPage(
       name: AppRoutes.settings,
       page: () => const SettingsPage(),
+      binding: SettingsBinding(),
     ),
 
+    // ═══════════════════════════════════════════════════════════════
     // المحادثات
+    // ═══════════════════════════════════════════════════════════════
+
     GetPage(
       name: AppRoutes.chatList,
       page: () => const ChatListPage(),
@@ -113,47 +168,76 @@ abstract class AppPages {
         otherUserId: Get.arguments['otherUserId'],
         otherUserName: Get.arguments['otherUserName'],
       ),
+      binding: ChatBinding(),
     ),
 
-    // منتجاتي
-    GetPage(
-      name: AppRoutes.myProducts,
-      page: () => const MyProductsPage(),
-    ),
+    // ═══════════════════════════════════════════════════════════════
+    // الطلبات والإشعارات
+    // ═══════════════════════════════════════════════════════════════
 
-    // طلباتي
     GetPage(
       name: AppRoutes.orders,
       page: () => const OrdersPage(),
+      binding: OrdersBinding(),
     ),
-
-    // الإشعارات
     GetPage(
       name: AppRoutes.notifications,
       page: () => const NotificationPage(),
+      binding: NotificationsBinding(),
     ),
 
-    // التصنيفات
+    // ═══════════════════════════════════════════════════════════════
+    // التصنيفات والبحث والمفضلة
+    // ═══════════════════════════════════════════════════════════════
+
     GetPage(
       name: AppRoutes.categories,
       page: () => CategoriesPage(
         onCategorySelected: Get.arguments ?? (category) {},
       ),
+      binding: CategoriesBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.search,
+      page: () => const SearchPage(),
+      binding: SearchBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.favorites,
+      page: () => const FavoritesPage(),
+      binding: FavoritesBinding(),
     ),
 
-    // اختيار المقايضة
+    // ═══════════════════════════════════════════════════════════════
+    // المقايضة
+    // ═══════════════════════════════════════════════════════════════
+
     GetPage(
       name: AppRoutes.swapSelection,
       page: () => SwapSelectionPage(
         targetProduct: Get.arguments['targetProduct'],
       ),
+      binding: SwapBinding(),
     ),
-
-    // طلبات المقايضة
     GetPage(
       name: AppRoutes.swapRequests,
       page: () => const SwapRequestsPage(),
       binding: SwapBinding(),
+    ),
+
+    // ═══════════════════════════════════════════════════════════════
+    // لوحة تحكم المسؤول
+    // ═══════════════════════════════════════════════════════════════
+
+    GetPage(
+      name: AppRoutes.admin,
+      page: () => const AdminDashboardPage(),
+      binding: AdminBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.adminFixProducts,
+      page: () => const FixProductsPage(),
+      binding: AdminBinding(),
     ),
   ];
 }

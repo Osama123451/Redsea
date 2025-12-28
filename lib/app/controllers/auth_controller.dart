@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:convert';
 import 'package:redsea/app/routes/app_routes.dart';
+import 'package:redsea/app/core/app_theme.dart';
 import 'cart_controller.dart';
 import 'favorites_controller.dart';
 
@@ -317,8 +318,8 @@ class AuthController extends GetxController {
   /// التحقق من صلاحية الأدمن
   bool requireAdmin({String message = 'هذه الميزة متاحة للمسؤولين فقط'}) {
     if (!isAdmin) {
-      Get.snackbar('غير مصرح', message,
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('ملاحظة', message,
+          backgroundColor: AppColors.primaryDark, colorText: Colors.white);
       return false;
     }
     return true;
@@ -326,7 +327,7 @@ class AuthController extends GetxController {
 
   /// رسالة عدم الصلاحية
   void showNoPermission([String? msg]) {
-    Get.snackbar('غير مصرح', msg ?? 'ليس لديك صلاحية',
-        backgroundColor: Colors.orange, colorText: Colors.white);
+    Get.snackbar('ملاحظة', msg ?? 'ليس لديك صلاحية',
+        backgroundColor: AppColors.primaryLight, colorText: Colors.white);
   }
 }

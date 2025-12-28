@@ -34,11 +34,17 @@ class MfaService {
       // تشفير الإيميل قبل الحفظ
       final encryptedEmail = EncryptionService.encrypt(email);
 
-      // حفظ بيانات MFA في قاعدة البيانات
+      // حفظ بيانات MFA في قاعدة البيانات (المسار الأصلي)
       await _database.child('users/${user.uid}/mfa').set({
         'enabled': true,
         'email': encryptedEmail,
         'enabledAt': ServerValue.timestamp,
+      });
+
+      // حفظ الإيميل في مسار منفصل يمكن قراءته بدون auth
+      await _database.child('mfa_settings/${user.uid}').set({
+        'email': encryptedEmail,
+        'enabled': true,
       });
 
       debugPrint('✅ MFA enabled successfully for user: ${user.uid}');
@@ -55,7 +61,10 @@ class MfaService {
       final user = _auth.currentUser;
       if (user == null) return false;
 
+      // حذف من المسار الأصلي
       await _database.child('users/${user.uid}/mfa').remove();
+      // حذف من المسار المنفصل
+      await _database.child('mfa_settings/${user.uid}').remove();
 
       debugPrint('✅ MFA disabled for user: ${user.uid}');
       return true;
@@ -83,7 +92,8 @@ class MfaService {
   /// التحقق من حالة MFA لمستخدم معين (عند تسجيل الدخول)
   static Future<bool> isMfaEnabledForUser(String uid) async {
     try {
-      final snapshot = await _database.child('users/$uid/mfa/enabled').get();
+      // القراءة من المسار المنفصل (يمكن الوصول له بدون auth)
+      final snapshot = await _database.child('mfa_settings/$uid/enabled').get();
       return snapshot.exists && snapshot.value == true;
     } catch (e) {
       debugPrint('Error checking MFA status for user: $e');
@@ -94,16 +104,26 @@ class MfaService {
   /// الحصول على الإيميل المشفر للمستخدم
   static Future<String?> getMfaEmail(String uid) async {
     try {
-      final snapshot = await _database.child('users/$uid/mfa/email').get();
+      // القراءة من المسار المنفصل (يمكن الوصول له بدون auth)
+      debugPrint(
+          '🔐 [getMfaEmail] Looking for email at path: mfa_settings/$uid/email');
+
+      final snapshot = await _database.child('mfa_settings/$uid/email').get();
+      debugPrint('🔐 [getMfaEmail] Snapshot exists: ${snapshot.exists}');
+
       if (snapshot.exists) {
         final encryptedEmail = snapshot.value as String?;
         if (encryptedEmail != null) {
-          return EncryptionService.decrypt(encryptedEmail);
+          final decryptedEmail = EncryptionService.decrypt(encryptedEmail);
+          debugPrint('🔐 [getMfaEmail] Decrypted email: $decryptedEmail');
+          return decryptedEmail;
         }
       }
+
+      debugPrint('❌ [getMfaEmail] No email found in mfa_settings');
       return null;
     } catch (e) {
-      debugPrint('Error getting MFA email: $e');
+      debugPrint('❌ [getMfaEmail] Error: $e');
       return null;
     }
   }
@@ -174,13 +194,13 @@ class MfaService {
       // ملاحظة: هذا الحل مناسب للتطبيقات الصغيرة أو الشخصية.
       // للتطبيقات الكبيرة، يُفضل استخدام خادم backend لتجنب وضع كلمات المرور في الكود.
       const username = 'osamammm018@gmail.com';
-      const password = 'pnjcjcygnskuziqa'; // App Password
+      const password = 'zkharvbahayvdcon'; // App Password
 
       final smtpServer = gmail(username, password);
 
       // إنشاء الرسالة
       final message = Message()
-        ..from = Address(username, 'RedSea App')
+        ..from = const Address(username, 'RedSea App')
         ..recipients.add(email)
         ..subject = 'RedSea Verification Code'
         ..text =
@@ -214,18 +234,34 @@ class MfaService {
   /// إرسال كود OTP لمستخدم معين عند تسجيل الدخول
   static Future<bool> sendLoginOtp(String uid) async {
     try {
+      debugPrint('🔐 [MFA] sendLoginOtp called for uid: $uid');
+
       // الحصول على الإيميل المحفوظ
       final email = await getMfaEmail(uid);
-      if (email == null) return false;
+      debugPrint('🔐 [MFA] Retrieved email: $email');
+
+      if (email == null) {
+        debugPrint('❌ [MFA] No MFA email found for user');
+        return false;
+      }
 
       // إنشاء كود جديد
       final otp = await createAndSaveOtp(uid);
-      if (otp == null) return false;
+      debugPrint('🔐 [MFA] Generated OTP: $otp');
+
+      if (otp == null) {
+        debugPrint('❌ [MFA] Failed to create OTP');
+        return false;
+      }
 
       // إرسال الكود
-      return await sendOtpEmail(email, otp);
+      debugPrint('📧 [MFA] Sending OTP to email: $email');
+      final result = await sendOtpEmail(email, otp);
+      debugPrint('📧 [MFA] Email send result: $result');
+
+      return result;
     } catch (e) {
-      debugPrint('Error sending login OTP: $e');
+      debugPrint('❌ [MFA] Error sending login OTP: $e');
       return false;
     }
   }

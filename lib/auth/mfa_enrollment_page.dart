@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:redsea/services/mfa_service.dart';
+import 'package:redsea/app/core/app_theme.dart';
 
 class MfaEnrollmentPage extends StatefulWidget {
   const MfaEnrollmentPage({super.key});
@@ -23,7 +24,7 @@ class _MfaEnrollmentPageState extends State<MfaEnrollmentPage> {
 
     if (email.isEmpty || !email.contains('@')) {
       Get.snackbar('تنبيه', 'الرجاء إدخال بريد إلكتروني صحيح',
-          backgroundColor: Colors.orange, colorText: Colors.white);
+          backgroundColor: AppColors.primaryLight, colorText: Colors.white);
       return;
     }
 
@@ -32,16 +33,16 @@ class _MfaEnrollmentPageState extends State<MfaEnrollmentPage> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        Get.snackbar('خطأ', 'يجب تسجيل الدخول أولاً',
-            backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar('تنبيه', 'يجب تسجيل الدخول أولاً',
+            backgroundColor: AppColors.primaryDark, colorText: Colors.white);
         return;
       }
 
       // إنشاء وحفظ كود OTP
       final otp = await MfaService.createAndSaveOtp(user.uid);
       if (otp == null) {
-        Get.snackbar('خطأ', 'حدث خطأ أثناء إنشاء الكود',
-            backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar('تنبيه', 'حدث خطأ أثناء إنشاء الكود',
+            backgroundColor: AppColors.primaryDark, colorText: Colors.white);
         return;
       }
 
@@ -50,14 +51,14 @@ class _MfaEnrollmentPageState extends State<MfaEnrollmentPage> {
       if (sent) {
         setState(() => _codeSent = true);
         Get.snackbar('تم الإرسال', 'تم إرسال كود التحقق إلى $email',
-            backgroundColor: Colors.green, colorText: Colors.white);
+            backgroundColor: AppColors.primary, colorText: Colors.white);
       } else {
-        Get.snackbar('خطأ', 'فشل إرسال الكود',
-            backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar('تنبيه', 'فشل إرسال الكود',
+            backgroundColor: AppColors.primaryDark, colorText: Colors.white);
       }
     } catch (e) {
-      Get.snackbar('خطأ', 'حدث خطأ: $e',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('تنبيه', 'حدث خطأ: $e',
+          backgroundColor: AppColors.primaryDark, colorText: Colors.white);
     } finally {
       setState(() => _loading = false);
     }
@@ -69,7 +70,7 @@ class _MfaEnrollmentPageState extends State<MfaEnrollmentPage> {
 
     if (code.length != 6) {
       Get.snackbar('تنبيه', 'الرجاء إدخال الكود المكون من 6 أرقام',
-          backgroundColor: Colors.orange, colorText: Colors.white);
+          backgroundColor: AppColors.primaryLight, colorText: Colors.white);
       return;
     }
 
@@ -80,15 +81,15 @@ class _MfaEnrollmentPageState extends State<MfaEnrollmentPage> {
 
       if (success) {
         Get.back(result: true);
-        Get.snackbar('نجاح', 'تم تفعيل التحقق بخطوتين بنجاح ✅',
-            backgroundColor: Colors.green, colorText: Colors.white);
+        Get.snackbar('نجاح', 'تم تفعيل التحقق بخطوتين بنجاح ✓',
+            backgroundColor: AppColors.primary, colorText: Colors.white);
       } else {
-        Get.snackbar('خطأ', 'الكود غير صحيح أو منتهي الصلاحية',
-            backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar('تنبيه', 'الكود غير صحيح أو منتهي الصلاحية',
+            backgroundColor: AppColors.primaryDark, colorText: Colors.white);
       }
     } catch (e) {
-      Get.snackbar('خطأ', 'حدث خطأ: $e',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('تنبيه', 'حدث خطأ: $e',
+          backgroundColor: AppColors.primaryDark, colorText: Colors.white);
     } finally {
       setState(() => _loading = false);
     }
@@ -180,19 +181,19 @@ class _MfaEnrollmentPageState extends State<MfaEnrollmentPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
+                  color: AppColors.primaryExtraLight,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.shade200),
+                  border: Border.all(color: AppColors.primaryLight),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.check_circle, color: Colors.green.shade700),
+                    Icon(Icons.check_circle, color: AppColors.primary),
                     const SizedBox(width: 8),
                     Text(
                       _emailController.text,
                       style: TextStyle(
-                        color: Colors.green.shade700,
+                        color: AppColors.primaryDark,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -231,7 +232,7 @@ class _MfaEnrollmentPageState extends State<MfaEnrollmentPage> {
                 child: ElevatedButton(
                   onPressed: _loading ? null : _verifyAndEnroll,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -279,19 +280,19 @@ class _MfaEnrollmentPageState extends State<MfaEnrollmentPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.amber.shade50,
+                color: AppColors.primaryExtraLight,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber.shade200),
+                border: Border.all(color: AppColors.primaryLight),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.amber.shade700),
+                  Icon(Icons.info_outline, color: AppColors.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'سيتم إرسال كود تحقق إلى هذا البريد عند كل تسجيل دخول',
                       style:
-                          TextStyle(color: Colors.amber.shade900, fontSize: 13),
+                          TextStyle(color: AppColors.primaryDark, fontSize: 13),
                     ),
                   ),
                 ],

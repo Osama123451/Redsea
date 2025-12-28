@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:redsea/app/core/app_theme.dart';
 
 /// دوال مساعدة
 class Helpers {
@@ -45,61 +46,65 @@ class Helpers {
     return NumberFormat('#,##0', 'ar').format(number);
   }
 
-  /// إظهار snackbar نجاح
+  /// إظهار snackbar نجاح - أزرق
   static void showSuccessSnackbar(String message) {
     Get.snackbar(
-      'نجاح',
+      'نجاح ✓',
       message,
-      backgroundColor: Colors.green,
+      backgroundColor: AppColors.primary,
       colorText: Colors.white,
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 3),
+      icon: const Icon(Icons.check_circle, color: Colors.white),
     );
   }
 
-  /// إظهار snackbar خطأ
+  /// إظهار snackbar خطأ - أزرق غامق
   static void showErrorSnackbar(String message) {
     Get.snackbar(
-      'خطأ',
+      'تنبيه',
       message,
-      backgroundColor: Colors.red,
+      backgroundColor: AppColors.primaryDark,
       colorText: Colors.white,
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 3),
+      icon: const Icon(Icons.error_outline, color: Colors.white),
     );
   }
 
-  /// إظهار snackbar تحذير
+  /// إظهار snackbar تحذير - أزرق فاتح
   static void showWarningSnackbar(String message) {
     Get.snackbar(
-      'تحذير',
+      'تنبيه',
       message,
-      backgroundColor: Colors.orange,
+      backgroundColor: AppColors.primaryLight,
       colorText: Colors.white,
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 3),
+      icon: const Icon(Icons.warning_amber, color: Colors.white),
     );
   }
 
-  /// إظهار snackbar معلومات
+  /// إظهار snackbar معلومات - أزرق
   static void showInfoSnackbar(String message) {
     Get.snackbar(
       'معلومات',
       message,
-      backgroundColor: Colors.blue,
+      backgroundColor: AppColors.primary,
       colorText: Colors.white,
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 3),
+      icon: const Icon(Icons.info_outline, color: Colors.white),
     );
   }
 
-  /// إظهار dialog تأكيد
+  /// إظهار dialog تأكيد - أزرق
   static Future<bool> showConfirmDialog({
     required String title,
     required String message,
     String confirmText = 'تأكيد',
     String cancelText = 'إلغاء',
-    Color confirmColor = Colors.red,
+    Color? confirmColor,
   }) async {
     final result = await Get.dialog<bool>(
       AlertDialog(
@@ -112,7 +117,9 @@ class Helpers {
           ),
           TextButton(
             onPressed: () => Get.back(result: true),
-            style: TextButton.styleFrom(foregroundColor: confirmColor),
+            style: TextButton.styleFrom(
+              foregroundColor: confirmColor ?? AppColors.primary,
+            ),
             child: Text(confirmText),
           ),
         ],
@@ -128,7 +135,9 @@ class Helpers {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(),
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
             if (message != null) ...[
               const SizedBox(height: 16),
               Text(message),

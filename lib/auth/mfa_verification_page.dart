@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:redsea/services/mfa_service.dart';
 import 'package:redsea/app/routes/app_routes.dart';
+import 'package:redsea/app/core/app_theme.dart';
 
 class MfaVerificationPage extends StatefulWidget {
   final String userId;
@@ -40,24 +41,58 @@ class _MfaVerificationPageState extends State<MfaVerificationPage> {
     setState(() => _sendingCode = true);
 
     try {
+      debugPrint(
+          '🔐 [MFA Page] Starting _sendOtpCode for userId: ${widget.userId}');
+
       // الحصول على الإيميل المحفوظ
       final email = await MfaService.getMfaEmail(widget.userId);
+      debugPrint('🔐 [MFA Page] Retrieved email: $email');
+
       if (email != null) {
         _mfaEmail = email;
 
         // إرسال كود OTP
+        debugPrint('🔐 [MFA Page] Calling sendLoginOtp...');
         final sent = await MfaService.sendLoginOtp(widget.userId);
+        debugPrint('🔐 [MFA Page] sendLoginOtp result: $sent');
+
         if (sent) {
           Get.snackbar('تم الإرسال', 'تم إرسال كود التحقق إلى بريدك',
-              backgroundColor: Colors.green, colorText: Colors.white);
+              backgroundColor: AppColors.primary, colorText: Colors.white);
         } else {
-          Get.snackbar('خطأ', 'فشل إرسال الكود',
-              backgroundColor: Colors.red, colorText: Colors.white);
+          Get.snackbar('تنبيه', 'فشل إرسال الكود',
+              backgroundColor: AppColors.primaryDark, colorText: Colors.white);
+        }
+      } else {
+        // FALLBACK: إذا لم يوجد إيميل محفوظ، اطبع الكود في console
+        debugPrint('❌ [MFA Page] No MFA email found - generating fallback OTP');
+
+        final otp = await MfaService.createAndSaveOtp(widget.userId);
+        if (otp != null) {
+          // ignore: avoid_print
+          print('📧 ==============================');
+          // ignore: avoid_print
+          print('📧 OTP Code (fallback): $otp');
+          // ignore: avoid_print
+          print('📧 ==============================');
+
+          // عرض الكود مباشرة في الـ snackbar
+          Get.snackbar('كود التحقق: $otp',
+              'استخدم هذا الكود للدخول (لم يتم العثور على البريد)',
+              backgroundColor: AppColors.primary,
+              colorText: Colors.white,
+              duration: const Duration(seconds: 30));
+        } else {
+          // ignore: avoid_print
+          print('❌ createAndSaveOtp returned null - check Firebase rules');
+          Get.snackbar('خطأ', 'فشل إنشاء كود التحقق - تأكد من رفع الـ rules',
+              backgroundColor: AppColors.primaryDark, colorText: Colors.white);
         }
       }
     } catch (e) {
-      Get.snackbar('خطأ', 'حدث خطأ: $e',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      debugPrint('❌ [MFA Page] Error in _sendOtpCode: $e');
+      Get.snackbar('تنبيه', 'حدث خطأ: $e',
+          backgroundColor: AppColors.primaryDark, colorText: Colors.white);
     } finally {
       if (mounted) setState(() => _sendingCode = false);
     }
@@ -67,7 +102,7 @@ class _MfaVerificationPageState extends State<MfaVerificationPage> {
     final code = _codeController.text.trim();
     if (code.length != 6) {
       Get.snackbar('تنبيه', 'الرجاء إدخال الكود المكون من 6 أرقام',
-          backgroundColor: Colors.orange, colorText: Colors.white);
+          backgroundColor: AppColors.primaryLight, colorText: Colors.white);
       return;
     }
 
@@ -84,25 +119,25 @@ class _MfaVerificationPageState extends State<MfaVerificationPage> {
         );
 
         Get.offAllNamed(AppRoutes.home);
-        Get.snackbar('نجاح', 'تم تسجيل الدخول بنجاح ✅',
-            backgroundColor: Colors.green, colorText: Colors.white);
+        Get.snackbar('نجاح', 'تم تسجيل الدخول بنجاح ✓',
+            backgroundColor: AppColors.primary, colorText: Colors.white);
       } else {
         _attempts++;
         _codeController.clear();
 
         if (_attempts >= _maxAttempts) {
-          Get.snackbar('تحذير', 'تجاوزت عدد المحاولات المسموحة. حاول لاحقاً.',
-              backgroundColor: Colors.red, colorText: Colors.white);
+          Get.snackbar('تنبيه', 'تجاوزت عدد المحاولات المسموحة. حاول لاحقاً.',
+              backgroundColor: AppColors.primaryDark, colorText: Colors.white);
           Get.offAllNamed(AppRoutes.login);
         } else {
-          Get.snackbar('خطأ',
+          Get.snackbar('تنبيه',
               'الكود غير صحيح أو منتهي. المحاولات المتبقية: ${_maxAttempts - _attempts}',
-              backgroundColor: Colors.red, colorText: Colors.white);
+              backgroundColor: AppColors.primaryDark, colorText: Colors.white);
         }
       }
     } catch (e) {
-      Get.snackbar('خطأ', 'حدث خطأ أثناء التحقق',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('تنبيه', 'حدث خطأ أثناء التحقق',
+          backgroundColor: AppColors.primaryDark, colorText: Colors.white);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -128,11 +163,12 @@ class _MfaVerificationPageState extends State<MfaVerificationPage> {
           onPressed: () => Get.offAllNamed(AppRoutes.login),
         ),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            SizedBox(height: MediaQuery.of(context).size.height * 0.1),
             // أيقونة البريد
             Container(
               padding: const EdgeInsets.all(20),

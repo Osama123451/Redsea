@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:redsea/app/routes/app_routes.dart';
+import 'package:redsea/app/core/app_theme.dart';
 import 'package:redsea/auth/mfa_verification_page.dart';
 import 'package:redsea/services/mfa_service.dart';
 
@@ -87,8 +88,8 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       // لا يوجد MFA - دخول مباشر
-      Get.snackbar('نجاح', 'تم تسجيل الدخول بنجاح ✅',
-          backgroundColor: Colors.green, colorText: Colors.white);
+      Get.snackbar('نجاح', 'تم تسجيل الدخول بنجاح ✓',
+          backgroundColor: AppColors.primary, colorText: Colors.white);
       Get.offAllNamed(AppRoutes.home);
     } on FirebaseAuthException catch (e) {
       String msg = 'حدث خطأ في المصادقة! حاول مرة أخرى.';
@@ -110,8 +111,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showError(String message) {
-    Get.snackbar('خطأ', message,
-        backgroundColor: Colors.red,
+    Get.snackbar('تنبيه', message,
+        backgroundColor: AppColors.primaryDark,
         colorText: Colors.white,
         duration: const Duration(seconds: 3));
   }
@@ -245,8 +246,8 @@ class _LoginPageState extends State<LoginPage> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.red.shade700,
-              Colors.blue.shade900,
+              AppColors.primary,
+              AppColors.primaryDark,
             ],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,

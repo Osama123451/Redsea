@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:redsea/product_model.dart';
+import 'package:redsea/app/core/app_theme.dart';
 
 /// نموذج طلب المقايضة
 class SwapRequest {
@@ -93,13 +94,13 @@ class SwapRequest {
   Color get statusColor {
     switch (status) {
       case 'pending':
-        return Colors.orange;
+        return AppColors.primaryLight;
       case 'accepted':
-        return Colors.green;
+        return AppColors.primary;
       case 'rejected':
-        return Colors.red;
+        return AppColors.primaryDark;
       case 'completed':
-        return Colors.blue;
+        return AppColors.primary;
       case 'cancelled':
         return Colors.grey;
       default:

@@ -15,7 +15,7 @@ void main() async {
   try {
     final smtpServer = gmail(username, password);
     final message = Message()
-      ..from = Address(username, 'Debug Test')
+      ..from = const Address(username, 'Debug Test')
       ..recipients.add(username) // Send to self
       ..subject = 'Test 1'
       ..text = 'This is a test email from debug script (Test 1).';
@@ -37,7 +37,7 @@ void main() async {
         ignoreBadCertificate: true);
 
     final message = Message()
-      ..from = Address(username, 'Debug Test')
+      ..from = const Address(username, 'Debug Test')
       ..recipients.add(username)
       ..subject = 'Test 2'
       ..text = 'This is a test email from debug script (Test 2).';

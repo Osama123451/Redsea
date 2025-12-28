@@ -66,23 +66,23 @@ class InAppNotificationService {
     switch (status) {
       case 'delivered':
       case 'completed':
-        bgColor = Colors.green.shade600;
+        bgColor = AppColors.primary;
         icon = Icons.check_circle;
         break;
       case 'pending_verification':
-        bgColor = Colors.amber.shade700;
+        bgColor = AppColors.primaryLight;
         icon = Icons.hourglass_empty;
         break;
       case 'cancelled':
-        bgColor = Colors.red.shade600;
+        bgColor = AppColors.primaryDark;
         icon = Icons.cancel;
         break;
       case 'shipped':
-        bgColor = Colors.purple.shade600;
+        bgColor = AppColors.primary;
         icon = Icons.local_shipping;
         break;
       default:
-        bgColor = Colors.blueGrey.shade600;
+        bgColor = AppColors.primaryDark;
         icon = Icons.inventory;
     }
 
@@ -112,7 +112,7 @@ class InAppNotificationService {
       '📢 $title',
       message,
       duration: const Duration(seconds: 6),
-      backgroundColor: Colors.orange.shade700,
+      backgroundColor: AppColors.primary,
       colorText: Colors.white,
       icon: const Icon(Icons.campaign, color: Colors.white),
       snackPosition: SnackPosition.TOP,
@@ -134,7 +134,7 @@ class InAppNotificationService {
       '🆕 إصدار جديد متاح v$version',
       features,
       duration: const Duration(seconds: 8),
-      backgroundColor: Colors.teal.shade600,
+      backgroundColor: AppColors.primaryDark,
       colorText: Colors.white,
       icon: const Icon(Icons.system_update, color: Colors.white),
       snackPosition: SnackPosition.TOP,
@@ -198,7 +198,7 @@ class InAppNotificationService {
             Text(message, textAlign: TextAlign.right),
           ],
         ),
-        backgroundColor: backgroundColor ?? Colors.amber.shade100,
+        backgroundColor: backgroundColor ?? AppColors.primaryExtraLight,
         actions: actions ??
             [
               TextButton(

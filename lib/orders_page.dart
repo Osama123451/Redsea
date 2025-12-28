@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-
+import 'package:redsea/app/core/app_theme.dart';
 import 'package:intl/intl.dart';
 
 class OrdersPage extends StatefulWidget {
@@ -79,13 +79,13 @@ class _OrdersPageState extends State<OrdersPage> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'pending_verification':
-        return Colors.orange;
+        return AppColors.primaryLight;
       case 'verified':
-        return Colors.green;
+        return AppColors.primary;
       case 'delivered':
-        return Colors.blue;
+        return AppColors.primary;
       case 'cancelled':
-        return Colors.red;
+        return AppColors.primaryDark;
       default:
         return Colors.grey;
     }

@@ -8,16 +8,31 @@
       ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
       ".indexOn": [
         "phone",
-        "email"
+        "email",
+        "role",
+        "createdAt",
+        "isActive"
       ],
       "$uid": {
-        ".read": "auth != null",
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
         ".write": "!data.exists() || (auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin'))"
       }
     },
     "user_devices": {
       "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    },
+    "mfa_codes": {
+      "$uid": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "mfa_settings": {
+      "$uid": {
+        ".read": true,
         ".write": "auth != null && auth.uid === $uid"
       }
     },
@@ -27,7 +42,9 @@
         "category",
         "sellerId",
         "createdAt",
-        "price"
+        "price",
+        "status",
+        "isAvailableForSwap"
       ],
       "$productId": {
         ".write": "auth != null && ((!data.exists() && newData.child('sellerId').val() === auth.uid) || (data.exists() && (data.child('sellerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')))"
@@ -35,6 +52,12 @@
     },
     "reviews": {
       ".read": true,
+      ".indexOn": [
+        "productId",
+        "userId",
+        "createdAt",
+        "rating"
+      ],
       "$productId": {
         "$reviewUserId": {
           ".write": "auth != null && (auth.uid == $reviewUserId || root.child('users').child(auth.uid).child('role').val() === 'admin')"
@@ -48,7 +71,9 @@
         "lastMessageTime",
         "user1Id",
         "user2Id",
-        "lastMessage/timestamp"
+        "lastMessage/timestamp",
+        "productId",
+        "swapId"
       ]
     },
     "messages": {
@@ -57,7 +82,8 @@
       "$chatId": {
         ".indexOn": [
           "timestamp",
-          "senderId"
+          "senderId",
+          "messageType"
         ]
       }
     },
@@ -66,7 +92,9 @@
         "buyerId",
         "sellerId",
         "status",
-        "createdAt"
+        "createdAt",
+        "totalAmount",
+        "paymentStatus"
       ],
       "$orderId": {
         ".read": "auth != null && (data.child('buyerId').val() === auth.uid || data.child('sellerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
@@ -90,7 +118,9 @@
         "requesterId",
         "targetOwnerId",
         "status",
-        "createdAt"
+        "createdAt",
+        "requesterProductId",
+        "targetProductId"
       ],
       "$swapId": {
         ".read": "auth != null && (data.child('requesterId').val() === auth.uid || data.child('targetOwnerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
@@ -103,15 +133,108 @@
         ".write": "auth != null"
       }
     },
+    "categories": {
+      ".read": true,
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+    },
     "notifications": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null"
       }
     },
-    "categories": {
-      ".read": true,
-      ".write": "auth != null"
+    "reports": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".indexOn": [
+        "type",
+        "status",
+        "createdAt",
+        "userId",
+        "resolvedBy",
+        "reportDate"
+      ],
+      "$reportId": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      }
+    },
+    "report_exports": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".indexOn": [
+        "type",
+        "format",
+        "status",
+        "createdAt",
+        "adminId",
+        "dateRange"
+      ],
+      "$exportId": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      }
+    },
+    "report_data": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".indexOn": [
+        "reportType",
+        "year",
+        "month",
+        "day",
+        "exported"
+      ],
+      "$dataId": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      }
+    },
+    "admin_dashboard": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      "statistics": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      },
+      "export_history": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".indexOn": [
+          "exportDate",
+          "format",
+          "adminId"
+        ]
+      }
+    },
+    "swap_transactions": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "swapId",
+        "user1Id",
+        "user2Id",
+        "status",
+        "completedAt"
+      ],
+      "$transactionId": {
+        ".read": "auth != null && (data.child('user1Id').val() === auth.uid || data.child('user2Id').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || (data.exists() && (data.child('user1Id').val() === auth.uid || data.child('user2Id').val() === auth.uid)))"
+      }
+    },
+    "swap_offers": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "productId",
+        "offeredProductId",
+        "userId",
+        "status"
+      ],
+      "$offerId": {
+        ".read": "auth != null && (data.child('userId').val() === auth.uid || data.child('productOwnerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && ((!data.exists() && newData.child('userId').val() === auth.uid) || (data.exists() && (data.child('userId').val() === auth.uid || data.child('productOwnerId').val() === auth.uid)) || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
     }
   }
 }

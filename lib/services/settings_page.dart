@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:redsea/login.dart';
 import 'package:get/get.dart';
 import 'package:redsea/app/controllers/theme_controller.dart';
+import 'package:redsea/app/core/app_theme.dart';
 import 'package:redsea/auth/mfa_enrollment_page.dart';
 import 'package:redsea/services/mfa_service.dart';
 
@@ -60,7 +61,7 @@ class _SettingsPageState extends State<SettingsPage> {
             TextButton(
               onPressed: _logout,
               style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
+                foregroundColor: AppColors.primaryDark,
               ),
               child: const Text('تسجيل خروج'),
             ),
@@ -232,15 +233,15 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.green.shade50, Colors.white],
+            colors: [AppColors.primaryExtraLight, Colors.white],
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
           ),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.green.shade200),
+          border: Border.all(color: AppColors.primaryLight),
           boxShadow: [
             BoxShadow(
-              color: Colors.green.withValues(alpha: 0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               spreadRadius: 1,
               blurRadius: 4,
               offset: const Offset(0, 2),
@@ -250,7 +251,8 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.green),
+            const Icon(Icons.arrow_back_ios_new,
+                size: 16, color: AppColors.primary),
             Expanded(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -263,7 +265,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                          color: AppColors.primary,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -280,10 +282,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade100,
+                      color: AppColors.primaryLight,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(icon, color: Colors.green, size: 24),
+                    child: Icon(icon, color: AppColors.primary, size: 24),
                   ),
                 ],
               ),
@@ -322,7 +324,7 @@ class _SettingsPageState extends State<SettingsPage> {
           TextButton(
             onPressed: _showDisableMfaDialog,
             style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
+              foregroundColor: AppColors.primaryDark,
             ),
             child: const Text('إلغاء التفعيل'),
           ),
@@ -387,14 +389,16 @@ class _SettingsPageState extends State<SettingsPage> {
               final success = await MfaService.disableMfa();
               if (success) {
                 Get.snackbar('نجاح', 'تم إلغاء المصادقة الثنائية',
-                    backgroundColor: Colors.green, colorText: Colors.white);
+                    backgroundColor: AppColors.primary,
+                    colorText: Colors.white);
                 _checkMfaStatus();
               } else {
-                Get.snackbar('خطأ', 'حدث خطأ أثناء إلغاء المصادقة',
-                    backgroundColor: Colors.red, colorText: Colors.white);
+                Get.snackbar('تنبيه', 'حدث خطأ أثناء إلغاء المصادقة',
+                    backgroundColor: AppColors.primaryDark,
+                    colorText: Colors.white);
               }
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: AppColors.primaryDark),
             child: const Text('تأكيد الإلغاء'),
           ),
         ],
@@ -461,14 +465,15 @@ class _SettingsPageState extends State<SettingsPage> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.red.shade50,
+          color: AppColors.primaryExtraLight,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.red.shade200),
+          border: Border.all(color: AppColors.primaryLight),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.red),
+            const Icon(Icons.arrow_back_ios_new,
+                size: 16, color: AppColors.primaryDark),
             Expanded(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -478,12 +483,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: Colors.red.shade700,
+                      color: AppColors.primaryDark,
                     ),
                     textAlign: TextAlign.right,
                   ),
                   const SizedBox(width: 12),
-                  Icon(icon, color: Colors.red),
+                  Icon(icon, color: AppColors.primaryDark),
                 ],
               ),
             ),
