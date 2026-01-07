@@ -458,8 +458,15 @@ class _HomePageState extends State<HomePage> {
         );
       }
 
-      return ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
+      return GridView.builder(
+        padding: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
+        scrollDirection: Axis.horizontal,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 200,
+          childAspectRatio: 1 / 1.8,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+        ),
         itemCount: productController.filteredProducts.length,
         itemBuilder: (context, index) {
           return _buildProductItem(productController.filteredProducts[index]);
