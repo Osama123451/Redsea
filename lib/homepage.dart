@@ -6,6 +6,7 @@ import 'package:redsea/app/controllers/cart_controller.dart';
 import 'package:redsea/app/controllers/favorites_controller.dart';
 import 'package:redsea/app/controllers/auth_controller.dart';
 import 'package:redsea/app/controllers/chat_controller.dart';
+import 'package:redsea/app/controllers/notifications_controller.dart';
 import 'package:redsea/app/routes/app_routes.dart';
 import 'package:redsea/product_model.dart';
 import 'package:redsea/product_details_page.dart';
@@ -16,8 +17,9 @@ import 'package:redsea/services/profile_page.dart';
 import 'package:redsea/services/settings_page.dart';
 import 'package:redsea/chat/chat_list_page.dart';
 import 'package:redsea/basket_page.dart';
-import 'package:redsea/search_page.dart';
 import 'package:redsea/favorites_page.dart';
+import 'package:redsea/services_exchange/services_exchange_page.dart';
+import 'package:redsea/search_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -35,6 +37,7 @@ class _HomePageState extends State<HomePage> {
 
   int _currentIndex = 0;
   final TextEditingController _searchController = TextEditingController();
+  bool _isAdvancedSearch = false;
 
   @override
   void initState() {
@@ -73,46 +76,9 @@ class _HomePageState extends State<HomePage> {
         ),
         centerTitle: true,
         actions: [
-          // زر البحث المتقدم
-          IconButton(
-            icon: Icon(Icons.search, color: Theme.of(context).iconTheme.color),
-            onPressed: () => Get.to(() => const SearchPage()),
-          ),
-          // زر المفضلة
-          Obx(() => Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.favorite_border, color: Colors.red),
-                    onPressed: () {
-                      final authController = Get.find<AuthController>();
-                      if (authController.requireLogin(
-                          message: 'سجّل دخولك لعرض المفضلة')) {
-                        Get.to(() => const FavoritesPage());
-                      }
-                    },
-                  ),
-                  if (favoritesController.favoritesCount > 0)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          '${favoritesController.favoritesCount}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              )),
+          // زر الإشعارات
+          _buildNotificationIcon(),
+          // زر السلة
           _buildCartIcon(),
         ],
       ),
@@ -179,6 +145,56 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Widget _buildNotificationIcon() {
+    return Obx(() {
+      final notificationsController = Get.find<NotificationsController>();
+      final unreadCount = notificationsController.unreadCount.value;
+      return Stack(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined,
+                color: Colors.black, size: 24),
+            onPressed: () {
+              final authController = Get.find<AuthController>();
+              if (!authController.requireLogin(
+                  message: 'سجّل دخولك لعرض الإشعارات')) {
+                return;
+              }
+              Get.to(() => const NotificationPage());
+            },
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 40),
+          ),
+          if (unreadCount > 0)
+            Positioned(
+              right: 8,
+              top: 8,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 16,
+                  minHeight: 16,
+                ),
+                child: Text(
+                  unreadCount > 99 ? '99+' : '$unreadCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      );
+    });
+  }
+
   Widget _buildCurrentPage() {
     switch (_currentIndex) {
       case 0:
@@ -193,7 +209,7 @@ class _HomePageState extends State<HomePage> {
           },
         );
       case 2:
-        return const NotificationPage();
+        return const ServicesExchangePage();
       case 3:
         return const ProfilePage();
       default:
@@ -224,43 +240,117 @@ class _HomePageState extends State<HomePage> {
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Row(
-          children: [
-            const SizedBox(width: 12),
-            const Icon(Icons.search, color: Colors.grey),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: 'ابحث عن منتج...',
-                  border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.grey),
-                ),
-                textAlign: TextAlign.right,
+      child: Row(
+        children: [
+          // زر تبديل نوع البحث
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _isAdvancedSearch = !_isAdvancedSearch;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: _isAdvancedSearch ? Colors.blue : Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _isAdvancedSearch ? Icons.tune : Icons.search,
+                    color:
+                        _isAdvancedSearch ? Colors.white : Colors.grey.shade700,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _isAdvancedSearch ? 'متقدم' : 'عادي',
+                    style: TextStyle(
+                      color: _isAdvancedSearch
+                          ? Colors.white
+                          : Colors.grey.shade700,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
             ),
-            Obx(() {
-              if (productController.searchQuery.value.isNotEmpty) {
-                return IconButton(
-                  icon: const Icon(Icons.clear, size: 20),
-                  onPressed: () {
-                    _searchController.clear();
-                    productController.clearSearch();
-                  },
-                );
-              }
-              return const SizedBox.shrink();
-            }),
-          ],
-        ),
+          ),
+          const SizedBox(width: 12),
+          // شريط البحث
+          Expanded(
+            child: GestureDetector(
+              onTap: _isAdvancedSearch
+                  ? () => Get.to(() => const SearchPage())
+                  : null,
+              child: Container(
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _isAdvancedSearch
+                        ? Colors.blue.shade300
+                        : Colors.grey.shade300,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 12),
+                    Icon(
+                      _isAdvancedSearch ? Icons.tune : Icons.search,
+                      color: _isAdvancedSearch ? Colors.blue : Colors.grey,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _isAdvancedSearch
+                          ? Text(
+                              'اضغط للبحث المتقدم...',
+                              style: TextStyle(
+                                color: Colors.blue.shade400,
+                                fontSize: 14,
+                              ),
+                              textAlign: TextAlign.right,
+                            )
+                          : TextField(
+                              controller: _searchController,
+                              decoration: const InputDecoration(
+                                hintText: 'ابحث عن منتج...',
+                                border: InputBorder.none,
+                                hintStyle: TextStyle(color: Colors.grey),
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                    ),
+                    if (!_isAdvancedSearch)
+                      Obx(() {
+                        if (productController.searchQuery.value.isNotEmpty) {
+                          return IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () {
+                              _searchController.clear();
+                              productController.clearSearch();
+                            },
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      }),
+                    if (_isAdvancedSearch)
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Colors.blue.shade400,
+                      ),
+                    const SizedBox(width: 8),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -604,82 +694,81 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildAddProductFAB() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: FloatingActionButton.extended(
-        onPressed: () {
-          final authController = Get.find<AuthController>();
-          if (!authController.requireLogin(message: 'سجّل دخولك لإضافة منتج')) {
-            return;
-          }
-          Get.to(() => const AddProductPage())
-              ?.then((_) => productController.loadProducts());
-        },
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text(
-          'أضف منتج',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-      ),
+    return FloatingActionButton(
+      onPressed: () {
+        final authController = Get.find<AuthController>();
+        if (!authController.requireLogin(message: 'سجّل دخولك لإضافة منتج')) {
+          return;
+        }
+        Get.to(() => const AddProductPage())
+            ?.then((_) => productController.loadProducts());
+      },
+      backgroundColor: Colors.blue,
+      foregroundColor: Colors.white,
+      child: const Icon(Icons.add, size: 32),
     );
   }
 
   Widget _buildDrawer() {
     final user = FirebaseAuth.instance.currentUser;
+    final authController = Get.find<AuthController>();
 
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          UserAccountsDrawerHeader(
-            accountName: Text(user?.displayName ?? "زائر"),
-            accountEmail: Text(user?.email ?? "لم يتم تسجيل الدخول"),
-            currentAccountPicture: CircleAvatar(
-              backgroundColor: Colors.white,
-              child: user?.photoURL != null
-                  ? ClipOval(
-                      child: Image.network(
-                        user!.photoURL!,
-                        fit: BoxFit.cover,
-                        width: 40,
-                        height: 40,
+          // هيدر الدراور - قابل للنقر للذهاب للحساب
+          GestureDetector(
+            onTap: () {
+              Get.back();
+              if (authController.requireLogin(
+                  message: 'سجّل دخولك لعرض حسابك')) {
+                setState(() => _currentIndex = 3);
+              }
+            },
+            child: Obx(() => Container(
+                  padding: const EdgeInsets.fromLTRB(16, 50, 16, 20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topRight,
+                      end: Alignment.bottomLeft,
+                      colors: [Colors.blue.shade700, Colors.blue.shade900],
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // صورة المستخدم
+                      CircleAvatar(
+                        radius: 45,
+                        backgroundColor: Colors.white,
+                        child: user?.photoURL != null
+                            ? ClipOval(
+                                child: Image.network(
+                                  user!.photoURL!,
+                                  fit: BoxFit.cover,
+                                  width: 86,
+                                  height: 86,
+                                ),
+                              )
+                            : const Icon(Icons.person,
+                                color: Colors.blue, size: 45),
                       ),
-                    )
-                  : const Icon(Icons.person, color: Colors.blue),
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: [Colors.blue.shade700, Colors.blue.shade900],
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildDrawerStat('منتجاتي', '0'),
-                _buildDrawerStat('مبيعات', '0'),
-                _buildDrawerStat('تقييم', '4.5'),
-              ],
-            ),
+                      const SizedBox(height: 14),
+                      // اسم المستخدم - من قاعدة البيانات
+                      Text(
+                        authController.userName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
           ),
           const Divider(),
-          ListTile(
-            leading: const Icon(Icons.home, color: Colors.blue),
-            title: const Text('الرئيسية'),
-            trailing: _currentIndex == 0
-                ? const Icon(Icons.check, color: Colors.green, size: 16)
-                : null,
-            onTap: () {
-              setState(() => _currentIndex = 0);
-              Get.back();
-            },
-          ),
           Obx(() {
             final chatController = Get.find<ChatController>();
             final unreadCount = chatController.unreadChatsCount.value;
@@ -744,61 +833,135 @@ class _HomePageState extends State<HomePage> {
               },
             );
           }),
-          ListTile(
-            leading: const Icon(Icons.category, color: Colors.blue),
-            title: const Text('التصنيفات'),
-            trailing: _currentIndex == 1
-                ? const Icon(Icons.check, color: Colors.green, size: 16)
-                : null,
-            onTap: () {
-              setState(() => _currentIndex = 1);
-              Get.back();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.swap_horiz, color: Colors.blue),
-            title: const Text('طلبات المقايضة'),
-            onTap: () {
-              Get.back();
-              final authController = Get.find<AuthController>();
-              if (authController.requireLogin(
-                  message: 'سجّل دخولك للوصول لطلبات المقايضة')) {
-                Get.toNamed(AppRoutes.swapRequests);
-              }
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.notifications, color: Colors.blue),
-            title: const Text('الإشعارات'),
-            trailing: _currentIndex == 2
-                ? const Icon(Icons.check, color: Colors.green, size: 16)
-                : null,
-            onTap: () {
-              final authController = Get.find<AuthController>();
-              if (!authController.requireLogin(
-                  message: 'سجّل دخولك لعرض الإشعارات')) {
-                return;
-              }
-              setState(() => _currentIndex = 2);
-              Get.back();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.person, color: Colors.blue),
-            title: const Text('حسابي'),
-            trailing: _currentIndex == 3
-                ? const Icon(Icons.check, color: Colors.green, size: 16)
-                : null,
-            onTap: () {
-              final authController = Get.find<AuthController>();
-              if (!authController.requireLogin(
-                  message: 'سجّل دخولك لعرض حسابك')) {
-                return;
-              }
-              setState(() => _currentIndex = 3);
-              Get.back();
-            },
-          ),
+          // المفضلة
+          Obx(() {
+            final count = favoritesController.favoritesCount;
+            return ListTile(
+              leading: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(Icons.favorite, color: Colors.red),
+                  if (count > 0)
+                    Positioned(
+                      right: -6,
+                      top: -6,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: Text(
+                          count > 99 ? '99+' : '$count',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              title: const Text('المفضلة'),
+              trailing: count > 0
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$count منتج',
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )
+                  : null,
+              onTap: () {
+                Get.back();
+                final authController = Get.find<AuthController>();
+                if (authController.requireLogin(
+                    message: 'سجّل دخولك لعرض المفضلة')) {
+                  Get.to(() => const FavoritesPage());
+                }
+              },
+            );
+          }),
+          // الإشعارات
+          Obx(() {
+            final notificationsController = Get.find<NotificationsController>();
+            final unreadCount = notificationsController.unreadCount.value;
+            return ListTile(
+              leading: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(Icons.notifications, color: Colors.orange),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: -6,
+                      top: -6,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : '$unreadCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              title: const Text('الإشعارات'),
+              trailing: unreadCount > 0
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$unreadCount جديد',
+                        style: TextStyle(
+                          color: Colors.orange.shade700,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )
+                  : null,
+              onTap: () {
+                Get.back();
+                final authController = Get.find<AuthController>();
+                if (authController.requireLogin(
+                    message: 'سجّل دخولك لعرض الإشعارات')) {
+                  Get.to(() => const NotificationPage());
+                }
+              },
+            );
+          }),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.settings, color: Colors.orange),
@@ -830,28 +993,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDrawerStat(String title, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.blue,
-          ),
-        ),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.grey,
-          ),
-        ),
-      ],
     );
   }
 
@@ -947,7 +1088,7 @@ class _HomePageState extends State<HomePage> {
         if (index == 2 || index == 3) {
           final authController = Get.find<AuthController>();
           String msg = index == 2
-              ? 'سجّل دخولك لعرض الإشعارات'
+              ? 'سجّل دخولك للوصول لتبادل الخدمات'
               : 'سجّل دخولك لعرض حسابك';
           if (!authController.requireLogin(message: msg)) return;
         }
@@ -968,8 +1109,8 @@ class _HomePageState extends State<HomePage> {
           label: 'التصنيفات',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.notifications),
-          label: 'الإشعارات',
+          icon: Icon(Icons.swap_horiz),
+          label: 'المقايضة',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person),

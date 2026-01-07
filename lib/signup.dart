@@ -80,6 +80,9 @@ class _SignUpPageState extends State<SignUpPage> {
         password: password,
       );
 
+      // تحديث اسم المستخدم في Firebase Auth
+      await userCredential.user!.updateDisplayName('$firstName $lastName');
+
       // حفظ البيانات في قاعدة البيانات users
       await _dbRef.child(userCredential.user!.uid).set({
         'firstName': firstName,
@@ -136,7 +139,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [
                         AppColors.primary,
                         AppColors.primaryDark,

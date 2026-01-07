@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:get/get.dart';
 import 'package:redsea/services/chat_service.dart';
 import 'package:redsea/services/encryption_service.dart';
 import 'package:redsea/app/core/app_theme.dart';
+import 'package:redsea/app/controllers/notifications_controller.dart';
+import 'package:redsea/app/controllers/chat_controller.dart';
 import 'package:intl/intl.dart' as intl;
 
 class ChatPage extends StatefulWidget {
@@ -32,6 +35,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   String currentUserId = '';
   bool _isTyping = false;
   bool _otherUserTyping = false;
+  bool _isUserBlocked = false;
   Map<String, dynamic>? _replyingTo;
 
   // Animation controllers
@@ -57,6 +61,38 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
     _messageController.addListener(_onTextChanged);
     _listenToTypingStatus();
+
+    // تحديد إشعارات هذه المحادثة كمقروءة
+    _markNotificationsAsRead();
+
+    // التحقق من حالة الحظر
+    _checkBlockStatus();
+  }
+
+  /// التحقق من حالة الحظر
+  Future<void> _checkBlockStatus() async {
+    try {
+      final chatController = Get.find<ChatController>();
+      if (mounted) {
+        setState(() {
+          _isUserBlocked = chatController.isUserBlocked(widget.otherUserId);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error checking block status: $e');
+    }
+  }
+
+  /// تحديد إشعارات المحادثة كمقروءة
+  void _markNotificationsAsRead() {
+    try {
+      if (Get.isRegistered<NotificationsController>()) {
+        final notificationsController = Get.find<NotificationsController>();
+        notificationsController.markChatNotificationsAsRead(widget.chatId);
+      }
+    } catch (e) {
+      debugPrint('Error marking notifications as read: $e');
+    }
   }
 
   @override
@@ -139,6 +175,203 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     HapticFeedback.selectionClick();
     setState(() => _replyingTo = message);
     _focusNode.requestFocus();
+  }
+
+  /// معالجة خيارات القائمة المنبثقة
+  void _handleMenuAction(String action) {
+    switch (action) {
+      case 'view':
+        // عرض الملف الشخصي
+        Get.snackbar('قريباً', 'سيتم إضافة عرض الملف الشخصي',
+            backgroundColor: AppColors.primary, colorText: Colors.white);
+        break;
+      case 'media':
+        Get.snackbar('قريباً', 'سيتم إضافة عرض الوسائط',
+            backgroundColor: AppColors.primary, colorText: Colors.white);
+        break;
+      case 'search':
+        Get.snackbar('قريباً', 'سيتم إضافة البحث في المحادثة',
+            backgroundColor: AppColors.primary, colorText: Colors.white);
+        break;
+      case 'mute':
+        Get.snackbar('قريباً', 'سيتم إضافة كتم الإشعارات',
+            backgroundColor: AppColors.primary, colorText: Colors.white);
+        break;
+      case 'delete_chat':
+        _showDeleteChatConfirmation();
+        break;
+      case 'block':
+        _showBlockUserConfirmation();
+        break;
+      case 'unblock':
+        _showUnblockUserConfirmation();
+        break;
+    }
+  }
+
+  /// حذف رسالة
+  Future<void> _deleteMessage(Map<String, dynamic> msg) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('حذف الرسالة؟'),
+        content: const Text('سيتم حذف هذه الرسالة نهائياً.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('حذف', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final chatController = Get.find<ChatController>();
+        final success =
+            await chatController.deleteMessage(widget.chatId, msg['id']);
+        if (success && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('تم حذف الرسالة')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('فشل في حذف الرسالة')),
+          );
+        }
+      }
+    }
+  }
+
+  /// تأكيد حذف المحادثة
+  Future<void> _showDeleteChatConfirmation() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('حذف المحادثة؟'),
+        content: const Text('سيتم حذف جميع الرسائل في هذه المحادثة نهائياً.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('حذف', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final chatController = Get.find<ChatController>();
+        final success =
+            await chatController.deleteChatCompletely(widget.chatId);
+        if (success && mounted) {
+          Get.back();
+          Get.snackbar('تم', 'تم حذف المحادثة',
+              backgroundColor: AppColors.success, colorText: Colors.white);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('فشل في حذف المحادثة')),
+          );
+        }
+      }
+    }
+  }
+
+  /// تأكيد حظر المستخدم
+  Future<void> _showBlockUserConfirmation() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('حظر المستخدم؟'),
+        content: Text(
+            'هل أنت متأكد من حظر ${widget.otherUserName}؟\n\nلن تتمكن من تلقي رسائل منه.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('حظر', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final chatController = Get.find<ChatController>();
+        final success = await chatController.blockUser(widget.otherUserId);
+        if (success && mounted) {
+          await _checkBlockStatus(); // تحديث الحالة
+          Get.snackbar('تم', 'تم حظر ${widget.otherUserName}',
+              backgroundColor: AppColors.error, colorText: Colors.white);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('فشل في حظر المستخدم')),
+          );
+        }
+      }
+    }
+  }
+
+  /// تأكيد إلغاء حظر المستخدم
+  Future<void> _showUnblockUserConfirmation() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('إلغاء حظر المستخدم؟'),
+        content: Text(
+            'هل أنت متأكد من إلغاء حظر ${widget.otherUserName}؟\n\nستتمكن من تبادل الرسائل معه مرة أخرى.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('إلغاء الحظر',
+                style: TextStyle(color: AppColors.primary)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final chatController = Get.find<ChatController>();
+        final success = await chatController.unblockUser(widget.otherUserId);
+        if (success && mounted) {
+          await _checkBlockStatus(); // تحديث الحالة
+          Get.snackbar('تم', 'تم إلغاء حظر ${widget.otherUserName}',
+              backgroundColor: AppColors.success, colorText: Colors.white);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('فشل في إلغاء حظر المستخدم')),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -287,13 +520,23 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
         ),
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: Colors.white),
+          onSelected: _handleMenuAction,
           itemBuilder: (context) => [
             const PopupMenuItem(value: 'view', child: Text('عرض الملف الشخصي')),
             const PopupMenuItem(
                 value: 'media', child: Text('الوسائط والملفات')),
             const PopupMenuItem(value: 'search', child: Text('بحث')),
             const PopupMenuItem(value: 'mute', child: Text('كتم الإشعارات')),
-            const PopupMenuItem(value: 'block', child: Text('حظر')),
+            const PopupMenuItem(
+                value: 'delete_chat', child: Text('حذف المحادثة')),
+            PopupMenuItem(
+              value: _isUserBlocked ? 'unblock' : 'block',
+              child: Text(
+                _isUserBlocked ? 'إلغاء الحظر' : 'حظر',
+                style: TextStyle(
+                    color: _isUserBlocked ? Colors.green : Colors.red),
+              ),
+            ),
           ],
         ),
       ],
@@ -660,7 +903,10 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
               ListTile(
                 leading: const Icon(Icons.delete, color: AppColors.error),
                 title: const Text('حذف'),
-                onTap: () => Navigator.pop(context),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _deleteMessage(msg);
+                },
               ),
           ],
         ),

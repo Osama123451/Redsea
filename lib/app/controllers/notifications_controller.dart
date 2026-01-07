@@ -389,6 +389,41 @@ class NotificationsController extends GetxController {
     }
   }
 
+  /// تحديد جميع إشعارات محادثة معينة كمقروءة
+  Future<void> markChatNotificationsAsRead(String chatId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    try {
+      // البحث عن جميع الإشعارات التي تخص هذه المحادثة
+      final chatNotifications = notifications
+          .where((n) =>
+              n['type'] == 'chat' &&
+              n['chatId'] == chatId &&
+              n['isRead'] != true)
+          .toList();
+
+      for (var notification in chatNotifications) {
+        await _notificationsRef
+            .child(userId)
+            .child(notification['id'])
+            .update({'isRead': true});
+
+        // تحديث محلي
+        notification['isRead'] = true;
+      }
+
+      if (chatNotifications.isNotEmpty) {
+        notifications.refresh();
+        unreadChatCount.value =
+            (unreadChatCount.value - chatNotifications.length).clamp(0, 9999);
+        _updateTotalUnreadCount();
+      }
+    } catch (e) {
+      debugPrint('Error marking chat notifications as read: $e');
+    }
+  }
+
   /// تحديد جميع الإشعارات كمقروءة
   Future<void> markAllAsRead() async {
     final userId = FirebaseAuth.instance.currentUser?.uid;

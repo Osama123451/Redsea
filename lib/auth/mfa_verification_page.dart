@@ -155,6 +155,7 @@ class _MfaVerificationPageState extends State<MfaVerificationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('التحقق بخطوتين'),
         centerTitle: true,
@@ -164,11 +165,12 @@ class _MfaVerificationPageState extends State<MfaVerificationPage> {
         ),
       ),
       body: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(height: MediaQuery.of(context).size.height * 0.1),
+            const SizedBox(height: 20),
             // أيقونة البريد
             Container(
               padding: const EdgeInsets.all(20),

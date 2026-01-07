@@ -232,7 +232,7 @@ class _SettingsPageState extends State<SettingsPage> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             colors: [AppColors.primaryExtraLight, Colors.white],
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
@@ -281,7 +281,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(width: 12),
                   Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppColors.primaryLight,
                       shape: BoxShape.circle,
                     ),
@@ -480,7 +480,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       color: AppColors.primaryDark,

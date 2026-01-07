@@ -43,6 +43,8 @@ import 'package:redsea/admin/admin_dashboard_page.dart';
 import 'package:redsea/admin/fix_products_page.dart';
 import 'package:redsea/auth/mfa_enrollment_page.dart';
 import 'package:redsea/auth/mfa_verification_page.dart';
+import 'package:redsea/app/bindings/service_binding.dart';
+import 'package:redsea/services_exchange/services_exchange_page.dart';
 
 /// تعريف صفحات التطبيق مع الـ Bindings
 abstract class AppPages {
@@ -223,6 +225,11 @@ abstract class AppPages {
       name: AppRoutes.swapRequests,
       page: () => const SwapRequestsPage(),
       binding: SwapBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.servicesExchange,
+      page: () => const ServicesExchangePage(),
+      binding: ServiceBinding(),
     ),
 
     // ═══════════════════════════════════════════════════════════════

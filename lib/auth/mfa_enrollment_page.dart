@@ -98,11 +98,13 @@ class _MfaEnrollmentPageState extends State<MfaEnrollmentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('تفعيل التحقق بخطوتين'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
@@ -188,11 +190,11 @@ class _MfaEnrollmentPageState extends State<MfaEnrollmentPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.check_circle, color: AppColors.primary),
+                    const Icon(Icons.check_circle, color: AppColors.primary),
                     const SizedBox(width: 8),
                     Text(
                       _emailController.text,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.primaryDark,
                         fontWeight: FontWeight.bold,
                       ),
@@ -284,10 +286,10 @@ class _MfaEnrollmentPageState extends State<MfaEnrollmentPage> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: AppColors.primaryLight),
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(Icons.info_outline, color: AppColors.primary),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'سيتم إرسال كود تحقق إلى هذا البريد عند كل تسجيل دخول',

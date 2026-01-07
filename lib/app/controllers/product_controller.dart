@@ -24,8 +24,37 @@ class ProductController extends GetxController {
     'الكل'
   ];
 
+  // متغيرات البحث المتقدم
+  double? _minPrice;
+  double? _maxPrice;
+  bool _negotiableOnly = false;
+  String _advancedSortBy = 'الأحدث';
+
   /// Getter لكل المنتجات (للبحث المتقدم)
   List<Product> get allProducts => products.toList();
+
+  /// تطبيق الفلاتر المتقدمة
+  void applyAdvancedFilters({
+    double? minPrice,
+    double? maxPrice,
+    bool negotiableOnly = false,
+    String sortBy = 'الأحدث',
+  }) {
+    _minPrice = minPrice;
+    _maxPrice = maxPrice;
+    _negotiableOnly = negotiableOnly;
+    _advancedSortBy = sortBy;
+    applyFilters();
+  }
+
+  /// مسح الفلاتر المتقدمة
+  void clearAdvancedFilters() {
+    _minPrice = null;
+    _maxPrice = null;
+    _negotiableOnly = false;
+    _advancedSortBy = 'الأحدث';
+    applyFilters();
+  }
 
   @override
   void onInit() {
@@ -94,7 +123,30 @@ class ProductController extends GetxController {
       filtered = SearchService.smartSearch(filtered, searchQuery.value);
     }
 
-    // ثم تطبيق الفلتر المحدد
+    // تطبيق فلتر السعر الأدنى
+    if (_minPrice != null) {
+      filtered = filtered.where((p) {
+        double productPrice =
+            double.tryParse(p.price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
+        return productPrice >= _minPrice!;
+      }).toList();
+    }
+
+    // تطبيق فلتر السعر الأعلى
+    if (_maxPrice != null) {
+      filtered = filtered.where((p) {
+        double productPrice =
+            double.tryParse(p.price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
+        return productPrice <= _maxPrice!;
+      }).toList();
+    }
+
+    // تطبيق فلتر القابل للتفاوض
+    if (_negotiableOnly) {
+      filtered = filtered.where((p) => p.negotiable).toList();
+    }
+
+    // ثم تطبيق الفلتر المحدد (التصنيفات)
     switch (selectedFilter.value) {
       case 'قابل للمقايضة':
         filtered = filtered.where((product) => product.negotiable).toList();
@@ -111,7 +163,7 @@ class ProductController extends GetxController {
         });
         break;
       case 'أخر المنتجات':
-        filtered.sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
+        // سيتم ترتيبه لاحقاً
         break;
       case 'الكل':
         break;
@@ -124,6 +176,37 @@ class ProductController extends GetxController {
               .where((product) => product.category == selectedFilter.value)
               .toList();
         }
+        break;
+    }
+
+    // تطبيق الترتيب المتقدم
+    switch (_advancedSortBy) {
+      case 'الأحدث':
+        filtered.sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
+        break;
+      case 'الأقدم':
+        filtered.sort((a, b) => a.dateAdded.compareTo(b.dateAdded));
+        break;
+      case 'السعر: الأقل':
+        filtered.sort((a, b) {
+          double priceA =
+              double.tryParse(a.price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
+          double priceB =
+              double.tryParse(b.price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
+          return priceA.compareTo(priceB);
+        });
+        break;
+      case 'السعر: الأعلى':
+        filtered.sort((a, b) {
+          double priceA =
+              double.tryParse(a.price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
+          double priceB =
+              double.tryParse(b.price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
+          return priceB.compareTo(priceA);
+        });
+        break;
+      case 'أبجدياً':
+        filtered.sort((a, b) => a.name.compareTo(b.name));
         break;
     }
 

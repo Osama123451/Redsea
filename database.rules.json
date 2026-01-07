@@ -5,7 +5,7 @@
       ".write": "auth != null"
     },
     "users": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".read": "auth != null",
       ".indexOn": [
         "phone",
         "email",
@@ -14,7 +14,7 @@
         "isActive"
       ],
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".read": "auth != null",
         ".write": "!data.exists() || (auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin'))"
       }
     },
@@ -234,6 +234,42 @@
       "$offerId": {
         ".read": "auth != null && (data.child('userId').val() === auth.uid || data.child('productOwnerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
         ".write": "auth != null && ((!data.exists() && newData.child('userId').val() === auth.uid) || (data.exists() && (data.child('userId').val() === auth.uid || data.child('productOwnerId').val() === auth.uid)) || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    },
+    "services": {
+      ".read": true,
+      ".write": "auth != null",
+      ".indexOn": [
+        "ownerId",
+        "category",
+        "createdAt",
+        "isAvailable",
+        "estimatedValue"
+      ],
+      "$serviceId": {
+        ".write": "auth != null && ((!data.exists() && newData.child('ownerId').val() === auth.uid) || (data.exists() && (data.child('ownerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')))"
+      }
+    },
+    "service_swap_requests": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "requesterId",
+        "targetOwnerId",
+        "status",
+        "timestamp",
+        "requesterServiceId",
+        "targetServiceId"
+      ],
+      "$requestId": {
+        ".read": "auth != null && (data.child('requesterId').val() === auth.uid || data.child('targetOwnerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && ((!data.exists() && newData.child('requesterId').val() === auth.uid) || (data.exists() && (data.child('requesterId').val() === auth.uid || data.child('targetOwnerId').val() === auth.uid)) || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    },
+    "blocked_users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
       }
     }
   }

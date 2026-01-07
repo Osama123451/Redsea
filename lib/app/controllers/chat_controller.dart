@@ -32,6 +32,7 @@ class ChatController extends GetxController {
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null) {
         startChatListener();
+        loadBlockedUsers(); // تحميل قائمة المحظورين
       } else {
         _clearData();
       }
@@ -107,6 +108,9 @@ class ChatController extends GetxController {
       unreadChatsCount.value = unread;
       _filterChats();
       isLoading.value = false;
+
+      // تحميل أسماء المستخدمين مسبقاً لتحسين الأداء
+      _preCacheUserNames(loadedChats);
     }
 
     // الاستعلام الأول: المحادثات حيث المستخدم هو user1Id
@@ -175,24 +179,38 @@ class ChatController extends GetxController {
   }
 
   /// تصفية المحادثات بناءً على البحث
-  void _filterChats() async {
+  void _filterChats() {
     if (searchQuery.value.isEmpty) {
-      filteredChats.value = chats;
+      filteredChats.value = chats.toList();
       return;
     }
 
     final query = searchQuery.value.toLowerCase();
+
+    // تصفية بسيطة بدون جلب البيانات من الشبكة لتجنب التعليق
+    // فقط نستخدم البيانات المخزنة مؤقتاً
     final List<Map<String, dynamic>> results = [];
 
     for (var chat in chats) {
-      // البحث في اسم المنتج
-      final productName = await getProductName(chat['productId']);
-      // البحث في اسم الطرف الآخر
+      // البحث في اسم الطرف الآخر من الكاش
       final otherUserId = getOtherUserId(chat);
-      final otherUserName = await getUserName(otherUserId);
+      String otherUserName = 'مستخدم';
+      if (_userCache.containsKey(otherUserId)) {
+        final data = _userCache[otherUserId]!;
+        String display = '';
+        if (data['firstName'] != null) {
+          display = '${data['firstName']} ${data['lastName'] ?? ''}'.trim();
+        }
 
-      if (productName.toLowerCase().contains(query) ||
-          otherUserName.toLowerCase().contains(query)) {
+        if (display.isEmpty || display == 'مستخدم') {
+          display = data['name'] ?? '';
+        }
+
+        otherUserName = display.isNotEmpty ? display : 'مستخدم';
+      }
+
+      // البحث في الاسم فقط
+      if (otherUserName.toLowerCase().contains(query)) {
         results.add(chat);
       }
     }
@@ -224,7 +242,22 @@ class ChatController extends GetxController {
   /// جلب اسم المستخدم (مع التخزين المؤقت)
   Future<String> getUserName(String userId) async {
     if (_userCache.containsKey(userId)) {
-      return _userCache[userId]?['name'] ?? 'مستخدم';
+      final data = _userCache[userId]!;
+      String display = '';
+
+      // 1. محاولة استخدام firstName + lastName
+      if (data['firstName'] != null) {
+        display = '${data['firstName']} ${data['lastName'] ?? ''}'.trim();
+      }
+
+      // 2. إذا لم يوجد، نستخدم name
+      if (display.isEmpty || display == 'مستخدم') {
+        display = data['name'] ?? '';
+      }
+
+      // 3. إذا كان الاسم فارغاً أو "مستخدم"، نستخدم القيمة الافتراضية
+
+      return display.isNotEmpty ? display : 'مستخدم';
     }
 
     try {
@@ -232,12 +265,36 @@ class ChatController extends GetxController {
       if (snapshot.exists) {
         final data = Map<String, dynamic>.from(snapshot.value as Map);
         _userCache[userId] = data;
-        return data['name'] ?? data['displayName'] ?? 'مستخدم';
+
+        String display = '';
+
+        if (data['firstName'] != null) {
+          display = '${data['firstName']} ${data['lastName'] ?? ''}'.trim();
+        }
+
+        if (display.isEmpty || display == 'مستخدم') {
+          display = data['name'] ?? '';
+        }
+
+        // 3. إذا كان الاسم فارغاً أو "مستخدم"، نستخدم القيمة الافتراضية
+
+        return display.isNotEmpty ? display : 'مستخدم';
       }
     } catch (e) {
-      // ignore
+      debugPrint('Error getting user name: $e');
     }
     return 'مستخدم';
+  }
+
+  /// تحميل أسماء المستخدمين مسبقاً لتحسين الأداء
+  void _preCacheUserNames(List<Map<String, dynamic>> loadedChats) async {
+    for (var chat in loadedChats) {
+      final otherUserId = getOtherUserId(chat);
+      if (otherUserId.isNotEmpty && !_userCache.containsKey(otherUserId)) {
+        // جلب في الخلفية بدون انتظار
+        getUserName(otherUserId);
+      }
+    }
   }
 
   /// جلب صورة المستخدم
@@ -345,6 +402,156 @@ class ChatController extends GetxController {
       // ملاحظة: لا نحذف المحادثة الفعلية أو الرسائل، فقط نزيلها من قائمة المستخدم
     } catch (e) {
       debugPrint('Error deleting chat: $e');
+    }
+  }
+
+  /// حذف رسالة محددة
+  Future<bool> deleteMessage(String chatId, String messageId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return false;
+
+    try {
+      // التحقق من أن المستخدم هو مرسل الرسالة
+      final messageRef =
+          FirebaseDatabase.instance.ref().child('messages/$chatId/$messageId');
+      final snapshot = await messageRef.get();
+
+      if (snapshot.exists) {
+        final data = Map<String, dynamic>.from(snapshot.value as Map);
+        if (data['senderId'] == userId) {
+          await messageRef.remove();
+          debugPrint('✅ Message deleted: $messageId');
+          return true;
+        } else {
+          debugPrint('❌ Cannot delete: not the sender');
+          return false;
+        }
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Error deleting message: $e');
+      return false;
+    }
+  }
+
+  /// حذف المحادثة بالكامل مع جميع الرسائل
+  Future<bool> deleteChatCompletely(String chatId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return false;
+
+    try {
+      // حذف جميع الرسائل
+      await FirebaseDatabase.instance.ref().child('messages/$chatId').remove();
+
+      // إزالة المحادثة من قائمة المستخدم
+      await FirebaseDatabase.instance
+          .ref()
+          .child('user_chats/$userId/$chatId')
+          .remove();
+
+      // تحديث القائمة المحلية
+      chats.removeWhere((chat) => chat['id'] == chatId);
+      _chatMap.remove(chatId);
+      _filterChats();
+
+      debugPrint('✅ Chat deleted completely: $chatId');
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting chat completely: $e');
+      return false;
+    }
+  }
+
+  // قائمة المستخدمين المحظورين (مخزنة مؤقتاً)
+  final RxSet<String> blockedUsers = <String>{}.obs;
+
+  /// حظر مستخدم
+  Future<bool> blockUser(String blockedUserId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return false;
+
+    try {
+      final blockData = {
+        'blockedAt': DateTime.now().millisecondsSinceEpoch,
+        'blockedBy': userId,
+      };
+
+      await FirebaseDatabase.instance
+          .ref()
+          .child('blocked_users/$userId/$blockedUserId')
+          .set(blockData);
+
+      blockedUsers.add(blockedUserId);
+      debugPrint('✅ User blocked: $blockedUserId');
+      return true;
+    } catch (e) {
+      debugPrint('Error blocking user: $e');
+      return false;
+    }
+  }
+
+  /// إلغاء حظر مستخدم
+  Future<bool> unblockUser(String blockedUserId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return false;
+
+    try {
+      await FirebaseDatabase.instance
+          .ref()
+          .child('blocked_users/$userId/$blockedUserId')
+          .remove();
+
+      blockedUsers.remove(blockedUserId);
+      debugPrint('✅ User unblocked: $blockedUserId');
+      return true;
+    } catch (e) {
+      debugPrint('Error unblocking user: $e');
+      return false;
+    }
+  }
+
+  /// التحقق من حالة الحظر
+  bool isUserBlocked(String userId) {
+    return blockedUsers.contains(userId);
+  }
+
+  /// جلب قائمة المستخدمين المحظورين
+  Future<void> loadBlockedUsers() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    try {
+      final snapshot = await FirebaseDatabase.instance
+          .ref()
+          .child('blocked_users/$userId')
+          .get();
+
+      if (snapshot.exists) {
+        final data = Map<String, dynamic>.from(snapshot.value as Map);
+        blockedUsers.clear();
+        blockedUsers.addAll(data.keys.cast<String>());
+        debugPrint('📋 Loaded ${blockedUsers.length} blocked users');
+      }
+    } catch (e) {
+      debugPrint('Error loading blocked users: $e');
+    }
+  }
+
+  /// التحقق مما إذا كان المستخدم محظوراً من قبل الطرف الآخر
+  Future<bool> isBlockedByUser(String otherUserId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return false;
+
+    try {
+      final snapshot = await FirebaseDatabase.instance
+          .ref()
+          .child('blocked_users/$otherUserId/$userId')
+          .get();
+
+      return snapshot.exists;
+    } catch (e) {
+      debugPrint('Error checking if blocked by user: $e');
+      return false;
     }
   }
 }

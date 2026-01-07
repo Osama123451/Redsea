@@ -90,6 +90,26 @@ class ChatService {
     debugPrint('   senderId (currentUserId): $currentUserId');
     debugPrint('   receiverId: $receiverId');
 
+    // التحقق من حالة الحظر - هل المستلم حظر المرسل؟
+    try {
+      final blockedSnapshot =
+          await _dbRef.child('blocked_users/$receiverId/$currentUserId').get();
+      if (blockedSnapshot.exists) {
+        debugPrint('🚫 Cannot send: You are blocked by this user');
+        return; // المستلم حظر المرسل - لا ترسل الرسالة
+      }
+
+      // هل المرسل حظر المستلم؟
+      final blockedByMeSnapshot =
+          await _dbRef.child('blocked_users/$currentUserId/$receiverId').get();
+      if (blockedByMeSnapshot.exists) {
+        debugPrint('🚫 Cannot send: You have blocked this user');
+        return; // لا يمكن الإرسال لمستخدم محظور
+      }
+    } catch (e) {
+      debugPrint('Error checking block status: $e');
+    }
+
     try {
       final messageRef = _dbRef.child('messages/$chatId').push();
       final encryptedText = EncryptionService.encrypt(text);
@@ -187,8 +207,8 @@ class ChatService {
       final notificationRef = _dbRef.child('notifications/$receiverId').push();
       await notificationRef.set({
         'title': 'رسالة جديدة من $senderName',
-        'body': 'بيانات مشفرة', // Do not show content in notification
-        'message': 'بيانات مشفرة', // للتوافق مع صفحة الإشعارات
+        'body': message,
+        'message': message,
         'timestamp': ServerValue.timestamp,
         'isRead': false,
         'type': 'chat',

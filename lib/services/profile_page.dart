@@ -191,9 +191,17 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildProfileHeader() {
-    final String name = _userData['firstName'] != null
-        ? '${_userData['firstName']} ${_userData['lastName'] ?? ''}'
-        : (_userData['name'] ?? 'مستخدم');
+    String name = '';
+    if (_userData['firstName'] != null) {
+      name = '${_userData['firstName']} ${_userData['lastName'] ?? ''}'.trim();
+    }
+
+    if (name.isEmpty || name == 'مستخدم') {
+      name = _userData['name'] ?? '';
+    }
+
+    // تم إزالة عرض رقم الهاتف كبديل احترماً للخصوصية
+
     final String phone = _userData['phone'] ?? 'لم يضف رقم';
     final String initial = name.isNotEmpty ? name[0].toUpperCase() : 'م';
 

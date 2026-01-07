@@ -176,9 +176,9 @@ class AppDecorations {
         ],
       );
 
-  static BoxDecoration headerDecoration = BoxDecoration(
+  static BoxDecoration headerDecoration = const BoxDecoration(
     gradient: AppColors.headerGradient,
-    borderRadius: const BorderRadius.only(
+    borderRadius: BorderRadius.only(
       bottomLeft: Radius.circular(30),
       bottomRight: Radius.circular(30),
     ),

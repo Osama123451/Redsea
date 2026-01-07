@@ -35,6 +35,7 @@ abstract class AppRoutes {
   // المقايضة
   static const swapSelection = '/swap-selection';
   static const swapRequests = '/swap-requests';
+  static const servicesExchange = '/services-exchange';
 
   // الأدمن
   static const admin = '/admin';
