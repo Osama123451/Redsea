@@ -37,6 +37,12 @@ abstract class AppRoutes {
   static const swapRequests = '/swap-requests';
   static const servicesExchange = '/services-exchange';
 
+  // الملف الشخصي العام
+  static const publicProfile = '/public-profile';
+
+  // شاشة الترحيب
+  static const onboarding = '/onboarding';
+
   // الأدمن
   static const admin = '/admin';
   static const adminFixProducts = '/admin/fix-products';

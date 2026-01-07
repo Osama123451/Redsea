@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:redsea/app/routes/app_routes.dart';
 import 'package:redsea/app/routes/app_pages.dart';
 import 'package:redsea/app/bindings/initial_binding.dart';
@@ -11,12 +12,20 @@ import 'package:redsea/services/encryption_service.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
 
+// متغير عام لتخزين حالة الترحيب
+late bool hasSeenOnboarding;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await initializeDateFormatting('ar_SA', null);
+
+  // التحقق من حالة الترحيب
+  final prefs = await SharedPreferences.getInstance();
+  hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
+
   try {
     await NotificationService().initialize();
   } catch (e) {
@@ -38,8 +47,8 @@ class MyApp extends StatelessWidget {
       // الربط الأولي
       initialBinding: InitialBinding(),
 
-      // المسار الأولي
-      initialRoute: AppRoutes.first,
+      // المسار الأولي - إظهار الترحيب للمستخدمين الجدد
+      initialRoute: hasSeenOnboarding ? AppRoutes.first : AppRoutes.onboarding,
 
       // صفحات التطبيق
       getPages: AppPages.pages,

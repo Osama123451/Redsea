@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:redsea/app/controllers/favorites_controller.dart';
 import 'package:redsea/app/controllers/auth_controller.dart';
 import 'package:redsea/app/routes/app_routes.dart';
+import 'package:redsea/app/ui/pages/profile/public_profile_page.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final Product product;
@@ -929,6 +930,78 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   ),
 
                   const SizedBox(height: 24),
+
+                  // قسم معلومات البائع
+                  if (widget.product.ownerId != null &&
+                      widget.product.ownerId !=
+                          FirebaseAuth.instance.currentUser?.uid)
+                    GestureDetector(
+                      onTap: () {
+                        if (widget.product.ownerId != null) {
+                          Get.to(() => PublicProfilePage(
+                                userId: widget.product.ownerId!,
+                              ));
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: Colors.blue.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            // أيقونة السهم
+                            const Icon(Icons.arrow_back_ios,
+                                color: Colors.blue, size: 16),
+                            const Spacer(),
+                            // اسم البائع
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                const Text(
+                                  'البائع:',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Text(
+                                  _isLoadingSellerName ? '...' : _sellerName,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 12),
+                            // صورة البائع
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: Colors.blue.shade100,
+                              child: Text(
+                                _isLoadingSellerName
+                                    ? '...'
+                                    : (_sellerName.isNotEmpty
+                                        ? _sellerName[0].toUpperCase()
+                                        : 'B'),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 16),
 
                   // قسم التقييم
                   Container(

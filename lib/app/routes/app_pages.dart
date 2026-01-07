@@ -45,6 +45,8 @@ import 'package:redsea/auth/mfa_enrollment_page.dart';
 import 'package:redsea/auth/mfa_verification_page.dart';
 import 'package:redsea/app/bindings/service_binding.dart';
 import 'package:redsea/services_exchange/services_exchange_page.dart';
+import 'package:redsea/app/ui/pages/profile/public_profile_page.dart';
+import 'package:redsea/app/ui/pages/onboarding/onboarding_page.dart';
 
 /// تعريف صفحات التطبيق مع الـ Bindings
 abstract class AppPages {
@@ -230,6 +232,26 @@ abstract class AppPages {
       name: AppRoutes.servicesExchange,
       page: () => const ServicesExchangePage(),
       binding: ServiceBinding(),
+    ),
+
+    // ═══════════════════════════════════════════════════════════════
+    // الملف الشخصي العام
+    // ═══════════════════════════════════════════════════════════════
+
+    GetPage(
+      name: AppRoutes.publicProfile,
+      page: () => PublicProfilePage(
+        userId: Get.parameters['userId'] ?? Get.arguments?['userId'] ?? '',
+      ),
+    ),
+
+    // ═══════════════════════════════════════════════════════════════
+    // شاشة الترحيب
+    // ═══════════════════════════════════════════════════════════════
+
+    GetPage(
+      name: AppRoutes.onboarding,
+      page: () => const OnboardingPage(),
     ),
 
     // ═══════════════════════════════════════════════════════════════

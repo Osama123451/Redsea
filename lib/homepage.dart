@@ -20,6 +20,7 @@ import 'package:redsea/basket_page.dart';
 import 'package:redsea/favorites_page.dart';
 import 'package:redsea/services_exchange/services_exchange_page.dart';
 import 'package:redsea/search_page.dart';
+import 'package:redsea/app/ui/widgets/shimmer_loading.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -225,7 +226,7 @@ class _HomePageState extends State<HomePage> {
         Expanded(
           child: Obx(() {
             if (productController.isLoading.value) {
-              return const Center(child: CircularProgressIndicator());
+              return const ProductGridSkeleton();
             }
             return RefreshIndicator(
               onRefresh: productController.loadProducts,
