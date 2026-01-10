@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -80,9 +82,35 @@ class ChatService {
     return chatId;
   }
 
+  // رفع ملف (صورة أو صوت)
+  Future<String?> uploadFile(File file, String chatId, String type) async {
+    try {
+      final String fileName =
+          '${type}_${DateTime.now().millisecondsSinceEpoch}';
+      final Reference ref =
+          FirebaseStorage.instance.ref().child('chats/$chatId/$fileName');
+
+      final SettableMetadata metadata = SettableMetadata(
+        contentType: type == 'image' ? 'image/jpeg' : 'audio/mp4',
+        customMetadata: {'uploaded_by': currentUserId ?? 'unknown'},
+      );
+
+      final UploadTask uploadTask = ref.putFile(file, metadata);
+      final TaskSnapshot snapshot = await uploadTask;
+      final String downloadUrl = await snapshot.ref.getDownloadURL();
+
+      return downloadUrl;
+    } catch (e) {
+      debugPrint('Error uploading file: $e');
+      return null;
+    }
+  }
+
   // إرسال رسالة
-  Future<void> sendMessage(String chatId, String text, String receiverId,
-      {Map<String, dynamic>? replyTo}) async {
+  Future<void> sendMessage(String chatId, String content, String receiverId,
+      {Map<String, dynamic>? replyTo,
+      String type = 'text',
+      Map<String, dynamic>? metadata}) async {
     if (currentUserId == null) return;
 
     debugPrint('💬 sendMessage called:');
@@ -111,14 +139,23 @@ class ChatService {
     }
 
     try {
-      final messageRef = _dbRef.child('messages/$chatId').push();
-      final encryptedText = EncryptionService.encrypt(text);
-      final messageData = {
+      final DatabaseReference messageRef =
+          _dbRef.child('messages/$chatId').push();
+
+      String encryptedText = content;
+      if (type == 'text') {
+        encryptedText = EncryptionService.encrypt(content);
+      }
+
+      final Map<String, dynamic> messageData = {
         'senderId': currentUserId,
+        'receiverId': receiverId,
         'text': encryptedText,
+        'type': type,
         'timestamp': ServerValue.timestamp,
-        'type': 'text',
         'read': false,
+        'replyTo': replyTo,
+        'metadata': metadata,
       };
 
       // إضافة بيانات الرد إذا كانت موجودة
@@ -136,32 +173,46 @@ class ChatService {
       debugPrint('   senderId: $currentUserId, receiverId: $receiverId');
 
       // تحديث آخر رسالة في المحادثة
-      await _dbRef.child('chats/$chatId').update({
-        'lastMessage': encryptedText,
+      final String lastMsgText = type == 'text'
+          ? 'رسالة نصية'
+          : (type == 'image' ? '📷 صورة' : '🎤 رسالة صوتية');
+
+      final updateData = {
+        'lastMessage': lastMsgText,
         'lastMessageTime': ServerValue.timestamp,
         'participants/${currentUserId!}': true,
         'participants/$receiverId': true,
         'users/${currentUserId!}': true,
         'users/$receiverId': true,
-      });
+      };
+
+      await _dbRef.child('chats/$chatId').update(updateData);
 
       // *** مهم: تسجيل المحادثة في user_chats لكلا المستخدمين ***
       // هذا يسمح لكل مستخدم برؤية المحادثات الخاصة به
-      await _dbRef.child('user_chats/${currentUserId!}/$chatId').set({
+      final userChatData = {
         'chatId': chatId,
         'otherUserId': receiverId,
-        'lastMessage': encryptedText,
+        'lastMessage': lastMsgText,
         'lastMessageTime': ServerValue.timestamp,
         'unread': false,
-      });
+      };
 
-      await _dbRef.child('user_chats/$receiverId/$chatId').set({
+      await _dbRef
+          .child('user_chats/${currentUserId!}/$chatId')
+          .set(userChatData);
+
+      final receiverChatData = {
         'chatId': chatId,
         'otherUserId': currentUserId,
-        'lastMessage': encryptedText,
+        'lastMessage': lastMsgText,
         'lastMessageTime': ServerValue.timestamp,
         'unread': true,
-      });
+      };
+
+      await _dbRef
+          .child('user_chats/$receiverId/$chatId')
+          .set(receiverChatData);
 
       // زيادة عداد الرسائل غير المقروءة للمستلم
       final unreadRef = _dbRef.child('chats/$chatId/unreadCount/$receiverId');
@@ -173,7 +224,11 @@ class ChatService {
       await unreadRef.set(currentUnread + 1);
 
       // إرسال إشعار للمستلم
-      await _sendNotification(receiverId, text, chatId);
+      String notificationBody = content;
+      if (type == 'image') notificationBody = '📷 أرسل صورة';
+      if (type == 'audio') notificationBody = '🎤 أرسل رسالة صوتية';
+
+      await _sendNotification(receiverId, notificationBody, chatId);
     } catch (e) {
       debugPrint('Error sending message: $e');
     }

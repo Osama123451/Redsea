@@ -34,11 +34,19 @@ class ImgBBService {
         return imageUrl;
       } else {
         debugPrint('❌ فشل الرفع: ${response.body}');
-        return null;
+        // محاولة استخراج رسالة الخطأ من السيرفر
+        String errorMessage = 'فشل رفع الصورة (${response.statusCode})';
+        try {
+          var jsonResponse = jsonDecode(response.body);
+          if (jsonResponse['error'] != null) {
+            errorMessage = jsonResponse['error']['message'];
+          }
+        } catch (_) {}
+        throw Exception(errorMessage);
       }
     } catch (e) {
       debugPrint('❌ خطأ في رفع الصورة: $e');
-      return null;
+      rethrow; // إعادة رمي الخطأ ليتم التعامل معه في الواجهة
     }
   }
 }

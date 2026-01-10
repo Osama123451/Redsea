@@ -440,14 +440,21 @@ class ChatController extends GetxController {
     if (userId == null) return false;
 
     try {
-      // حذف جميع الرسائل
+      // 1. حذف جميع الرسائل
       await FirebaseDatabase.instance.ref().child('messages/$chatId').remove();
 
-      // إزالة المحادثة من قائمة المستخدم
+      // 2. حذف بيانات المحادثة الوصفية (metadata)
+      // هذا يضمن إعادة تعيين المحادثة بالكامل عند البدء من جديد
+      await FirebaseDatabase.instance.ref().child('chats/$chatId').remove();
+
+      // 3. إزالة المحادثة من قائمة المستخدم الحالي
       await FirebaseDatabase.instance
           .ref()
           .child('user_chats/$userId/$chatId')
           .remove();
+
+      // ملاحظة: قد نرغب في حذفها من قائمة الطرف الآخر أيضًا
+      // ولكن سنتركها لتظهر فارغة أو تختفي عند التحديث لتجنب المشاكل
 
       // تحديث القائمة المحلية
       chats.removeWhere((chat) => chat['id'] == chatId);

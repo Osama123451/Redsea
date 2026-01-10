@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:record/record.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:redsea/services/chat_service.dart';
 import 'package:redsea/services/encryption_service.dart';
+import 'package:redsea/services/imgbb_service.dart';
 import 'package:redsea/app/core/app_theme.dart';
 import 'package:redsea/app/controllers/notifications_controller.dart';
 import 'package:redsea/app/controllers/chat_controller.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:permission_handler/permission_handler.dart';
 
 class ChatPage extends StatefulWidget {
   final String chatId;
@@ -38,6 +47,27 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   bool _isUserBlocked = false;
   Map<String, dynamic>? _replyingTo;
 
+  // Subscription للـ typing status
+  StreamSubscription<DatabaseEvent>? _typingSubscription;
+
+  // Audio & Image
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  final ImagePicker _imagePicker = ImagePicker();
+  bool _isRecording = false;
+  String? _audioPath;
+  static final AudioPlayer _globalAudioPlayer = AudioPlayer();
+  AudioPlayer get _audioPlayer => _globalAudioPlayer;
+
+  // Audio Playback State
+  String? _currentlyPlayingId;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
+  PlayerState _playerState = PlayerState.stopped;
+  final Stopwatch _recordingStopwatch = Stopwatch();
+
+  // Streams
+  late Stream<DatabaseEvent> _messagesStream;
+
   // Animation controllers
   late AnimationController _sendButtonController;
   late Animation<double> _sendButtonAnimation;
@@ -61,6 +91,29 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
     _messageController.addListener(_onTextChanged);
     _listenToTypingStatus();
+
+    // Audio Player Listeners
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted) setState(() => _playerState = state);
+    });
+    _audioPlayer.onDurationChanged.listen((d) {
+      if (mounted) setState(() => _duration = d);
+    });
+    _audioPlayer.onPositionChanged.listen((p) {
+      if (mounted) setState(() => _position = p);
+    });
+    _audioPlayer.onPlayerComplete.listen((_) {
+      if (mounted) {
+        setState(() {
+          _playerState = PlayerState.stopped;
+          _position = Duration.zero;
+          _currentlyPlayingId = null;
+        });
+      }
+    });
+
+    // Initialize messages stream
+    _messagesStream = _chatService.getMessagesStream(widget.chatId);
 
     // تحديد إشعارات هذه المحادثة كمقروءة
     _markNotificationsAsRead();
@@ -97,12 +150,14 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    // إلغاء الاشتراك أولاً لمنع التعليق
+    _typingSubscription?.cancel();
+    _updateTypingStatus(false);
     _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
     _sendButtonController.dispose();
-    _updateTypingStatus(false);
     super.dispose();
   }
 
@@ -130,13 +185,163 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     final ref = FirebaseDatabase.instance
         .ref()
         .child('chats/${widget.chatId}/typing/${widget.otherUserId}');
-    ref.onValue.listen((event) {
+    _typingSubscription = ref.onValue.listen((event) {
       if (mounted) {
         setState(() {
           _otherUserTyping = event.snapshot.value == true;
         });
       }
     });
+  }
+
+  // التقاط صورة
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+        requestFullMetadata: false, // قد يساعد في بعض الأجهزة
+      );
+
+      if (image != null) {
+        _uploadAndSendFile(File(image.path), 'image');
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+      if (e.toString().contains('permission')) {
+        Get.snackbar(
+          'تنبيه',
+          'يرجى منح صلاحية الوصول للصور',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
+      } else {
+        Get.snackbar('خطأ', 'فشل اختيار الصورة',
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    }
+  }
+
+  // تسجيل صوت
+  Future<void> _startRecording() async {
+    try {
+      // طلب الإذن بشكل صريح باستخدام permission_handler
+      var status = await Permission.microphone.status;
+
+      if (!status.isGranted) {
+        status = await Permission.microphone.request();
+      }
+
+      if (status.isGranted) {
+        final directory = await getApplicationDocumentsDirectory();
+        final path =
+            '${directory.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+        // تكوين التسجيل
+        const config = RecordConfig(
+          encoder: AudioEncoder.aacLc,
+        );
+
+        _recordingStopwatch.reset();
+        _recordingStopwatch.start();
+        await _audioRecorder.start(config, path: path);
+
+        setState(() {
+          _isRecording = true;
+          _audioPath = path;
+        });
+      } else {
+        // إذا تم رفض الإذن
+        if (status.isPermanentlyDenied) {
+          openAppSettings();
+        }
+        Get.snackbar(
+          'تنبيه',
+          'يرجى منح صلاحية الميكروفون لتسجيل الصوت',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error starting recording: $e');
+      Get.snackbar('خطأ', 'فشل بدء التسجيل: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    try {
+      _recordingStopwatch.stop();
+      final duration = _recordingStopwatch.elapsedMilliseconds;
+      final path = await _audioRecorder.stop();
+
+      setState(() {
+        _isRecording = false;
+      });
+
+      if (path != null) {
+        _uploadAndSendFile(File(path), 'audio', duration: duration);
+      }
+    } catch (e) {
+      debugPrint('Error stopping recording: $e');
+    }
+  }
+
+  Future<void> _uploadAndSendFile(File file, String type,
+      {int? duration}) async {
+    // إظهار مؤشر تحميل (يمكن تحسينه)
+    Get.snackbar(
+      'جاري الإرسال',
+      type == 'image' ? 'جاري رفع الصورة...' : 'جاري معالجة التسجيل...',
+      showProgressIndicator: true,
+      backgroundColor: AppColors.primary,
+      colorText: Colors.white,
+    );
+
+    String? url;
+
+    try {
+      // استخدام ImgBB للصور
+      if (type == 'image') {
+        url = await ImgBBService.uploadImage(file);
+      } else if (type == 'audio') {
+        // تحويل الصوت إلى Base64 وتخزينه مباشرة
+        final bytes = await file.readAsBytes();
+        url = base64Encode(bytes);
+      } else {
+        url = await _chatService.uploadFile(file, widget.chatId, type);
+      }
+
+      if (url != null) {
+        Map<String, dynamic>? metadata;
+        if (type == 'audio' && duration != null) {
+          metadata = {'duration': duration};
+        }
+
+        await _chatService.sendMessage(
+          widget.chatId,
+          url,
+          widget.otherUserId,
+          type: type,
+          replyTo: _replyingTo,
+          metadata: metadata,
+        );
+
+        // إخفاء الرد بعد الإرسال
+        setState(() => _replyingTo = null);
+        _scrollToBottom();
+      }
+    } catch (e) {
+      debugPrint('Error uploading file: $e');
+      String errorMessage = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar(
+        'خطأ',
+        'فشل الرفع: $errorMessage',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 5),
+      );
+    }
   }
 
   Future<void> _sendMessage() async {
@@ -379,54 +584,70 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: AppColors.chatBackground, // Unified background
       appBar: _buildAppBar(),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: StreamBuilder<DatabaseEvent>(
-              stream: _chatService.getMessagesStream(widget.chatId),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return _buildLoadingState();
-                }
+          Column(
+            children: [
+              // Debug Status Overlay
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(4),
+                color: Colors.red.withOpacity(0.1),
+                child: Text(
+                  'DEBUG: State: ${_playerState.name} | ID: ${_currentlyPlayingId?.substring(0, 5) ?? "None"}',
+                  style: const TextStyle(fontSize: 10, color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Expanded(
+                child: StreamBuilder<DatabaseEvent>(
+                  stream: _messagesStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return _buildLoadingState();
+                    }
 
-                debugPrint(
-                    '📥 ChatPage receiving stream for chatId: ${widget.chatId}');
-                debugPrint(
-                    '   hasData: ${snapshot.hasData}, value: ${snapshot.data?.snapshot.value != null}');
+                    debugPrint(
+                        '📥 ChatPage receiving stream for chatId: ${widget.chatId}');
+                    debugPrint(
+                        '   hasData: ${snapshot.hasData}, value: ${snapshot.data?.snapshot.value != null}');
 
-                if (!snapshot.hasData ||
-                    snapshot.data?.snapshot.value == null) {
-                  return _buildEmptyState();
-                }
+                    if (!snapshot.hasData ||
+                        snapshot.data?.snapshot.value == null) {
+                      return _buildEmptyState();
+                    }
 
-                Map<dynamic, dynamic> messagesMap =
-                    snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
-                List<Map<String, dynamic>> messages = [];
+                    List<Map<String, dynamic>> messages = [];
+                    for (var child in snapshot.data!.snapshot.children) {
+                      if (child.value == null) continue;
+                      final msg = Map<String, dynamic>.from(child.value as Map);
+                      msg['id'] = child.key;
+                      messages.add(msg);
+                    }
 
-                messagesMap.forEach((key, value) {
-                  final msg = Map<String, dynamic>.from(value);
-                  msg['id'] = key;
-                  messages.add(msg);
-                });
+                    // الترتيب من الأقدم للأحدث (اختياري حسب ListView)
+                    // messages.sort((a, b) => (a['timestamp'] ?? 0).compareTo(b['timestamp'] ?? 0));
 
-                debugPrint(
-                    '📨 Loaded ${messages.length} messages for chat: ${widget.chatId}');
+                    debugPrint(
+                        '📨 Loaded ${messages.length} messages for chat: ${widget.chatId}');
 
-                messages.sort((a, b) =>
-                    (a['timestamp'] ?? 0).compareTo(b['timestamp'] ?? 0));
+                    messages.sort((a, b) =>
+                        (a['timestamp'] ?? 0).compareTo(b['timestamp'] ?? 0));
 
-                WidgetsBinding.instance
-                    .addPostFrameCallback((_) => _scrollToBottom());
+                    WidgetsBinding.instance
+                        .addPostFrameCallback((_) => _scrollToBottom());
 
-                return _buildMessagesList(messages);
-              },
-            ),
+                    return _buildMessagesList(messages);
+                  },
+                ),
+              ),
+              // Typing indicator
+              if (_otherUserTyping) _buildTypingIndicator(),
+              // Reply preview
+              if (_replyingTo != null) _buildReplyPreview(),
+              _buildMessageInput(),
+            ],
           ),
-          // Typing indicator
-          if (_otherUserTyping) _buildTypingIndicator(),
-          // Reply preview
-          if (_replyingTo != null) _buildReplyPreview(),
-          _buildMessageInput(),
         ],
       ),
     );
@@ -555,7 +776,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Colors.black.withOpacity(0.1),
                   blurRadius: 20,
                 ),
               ],
@@ -577,11 +798,11 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.all(30),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.9),
+              color: Colors.white.withOpacity(0.9),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.2),
+                  color: AppColors.primary.withOpacity(0.2),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
@@ -684,7 +905,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 5,
             ),
           ],
@@ -705,78 +926,87 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
       Map<String, dynamic> msg, bool isMe, bool showTail) {
     final hasReply = msg['replyTo'] != null;
 
-    return Dismissible(
-      key: ValueKey('dismiss_${msg['id']}'),
-      direction: DismissDirection.startToEnd,
-      confirmDismiss: (direction) async {
-        _setReplyingTo(msg);
-        return false;
-      },
-      background: Container(
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.only(left: 20),
-        child: const Icon(Icons.reply, color: Colors.grey),
+    final bool isAudio = msg['type'] == 'audio';
+
+    Widget bubble = Padding(
+      padding: EdgeInsets.only(
+        top: 4,
+        bottom: showTail ? 12 : 4,
+        left: isMe ? 50 : 8,
+        right: isMe ? 8 : 50,
       ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          top: 4,
-          bottom: showTail ? 12 : 4,
-          left: isMe ? 50 : 8,
-          right: isMe ? 8 : 50,
-        ),
-        child: Row(
-          mainAxisAlignment:
-              isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
+      child: Row(
+        mainAxisAlignment:
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.75,
+            ),
+            decoration: BoxDecoration(
+              color: isMe
+                  ? AppColors.chatBubbleSent
+                  : AppColors.chatBubbleReceived,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(16),
+                topRight: const Radius.circular(16),
+                bottomLeft: Radius.circular(isMe || !showTail ? 16 : 4),
+                bottomRight: Radius.circular(!isMe || !showTail ? 16 : 4),
               ),
-              decoration: BoxDecoration(
-                color: isMe
-                    ? AppColors.chatBubbleSent
-                    : AppColors.chatBubbleReceived,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isMe || !showTail ? 16 : 4),
-                  bottomRight: Radius.circular(!isMe || !showTail ? 16 : 4),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onLongPress: () => _showMessageOptions(msg),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Reply preview in message
-                          if (hasReply) _buildReplyInMessage(msg['replyTo']),
-                          // Message text
-                          Text(
-                            EncryptionService.decrypt(msg['text'] ?? ''),
-                            style: TextStyle(
-                              color: Colors.grey.shade900,
-                              fontSize: 16,
-                              height: 1.3,
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onLongPress: () => _showMessageOptions(msg),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.all(4), // Reduced padding for media
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Reply preview
+                        if (hasReply)
+                          Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 6),
+                              child: _buildReplyInMessage(msg['replyTo'])),
+
+                        // Content based on type
+                        if (msg['type'] == 'image')
+                          _buildImageMessage(msg['text'], isMe)
+                        else if (msg['type'] == 'audio')
+                          _buildAudioMessage(
+                              msg['text'], isMe, msg['metadata'], msg['id'])
+                        else
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            child: Text(
+                              EncryptionService.decrypt(msg['text'] ?? ''),
+                              style: TextStyle(
+                                color: Colors.grey.shade900,
+                                fontSize: 16,
+                                height: 1.3,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          // Time and read status
-                          Row(
+
+                        const SizedBox(height: 2),
+                        // Time and read status
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              left: 10, right: 10, bottom: 6),
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
@@ -800,16 +1030,34 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                               ],
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+
+    if (isAudio)
+      return bubble; // Skip Dismissible for audio to avoid "page shaking"
+
+    return Dismissible(
+      key: ValueKey('dismiss_${msg['id']}'),
+      direction: DismissDirection.startToEnd,
+      confirmDismiss: (direction) async {
+        _setReplyingTo(msg);
+        return false;
+      },
+      background: Container(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        child: const Icon(Icons.reply, color: Colors.grey),
+      ),
+      child: bubble,
     );
   }
 
@@ -818,7 +1066,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.05),
+        color: Colors.black.withOpacity(0.05),
         borderRadius: BorderRadius.circular(8),
         border: const Border(
           left: BorderSide(
@@ -925,7 +1173,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 5,
             ),
           ],
@@ -1016,7 +1264,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
         color: const Color(0xFFF0F0F0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             offset: const Offset(0, -2),
             blurRadius: 5,
           ),
@@ -1061,12 +1309,8 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.attach_file, color: Colors.grey.shade600),
-                    onPressed: () {},
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.camera_alt, color: Colors.grey.shade600),
-                    onPressed: () {},
+                    icon: Icon(Icons.image, color: Colors.grey.shade600),
+                    onPressed: _pickImage,
                   ),
                 ],
               ),
@@ -1078,16 +1322,47 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
             animation: _sendButtonAnimation,
             builder: (context, child) {
               return GestureDetector(
-                onTap: _isTyping ? _sendMessage : null,
+                onTap: () {
+                  if (_isTyping) {
+                    _sendMessage();
+                  } else {
+                    // تنبيه المستخدم بالضغط المطول
+                    Get.closeAllSnackbars();
+                    Get.snackbar(
+                      'تسجيل صوتي',
+                      'اضغط مطولاً للتسجيل',
+                      backgroundColor: AppColors.primary,
+                      colorText: Colors.white,
+                      duration: const Duration(seconds: 1),
+                      snackPosition: SnackPosition.TOP,
+                    );
+                  }
+                },
+                onLongPress: () {
+                  if (!_isTyping) _startRecording();
+                },
+                onLongPressEnd: (_) {
+                  if (!_isTyping) _stopRecording();
+                },
                 child: Container(
                   width: 48,
                   height: 48,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
+                  decoration: BoxDecoration(
+                    color: _isRecording ? Colors.red : AppColors.primary,
                     shape: BoxShape.circle,
+                    boxShadow: _isRecording
+                        ? [
+                            BoxShadow(
+                                color: Colors.red.withOpacity(0.5),
+                                blurRadius: 10,
+                                spreadRadius: 2)
+                          ]
+                        : null,
                   ),
                   child: Icon(
-                    _isTyping ? Icons.send : Icons.mic,
+                    _isTyping
+                        ? Icons.send
+                        : (_isRecording ? Icons.stop : Icons.mic),
                     color: Colors.white,
                     size: 22,
                   ),
@@ -1104,6 +1379,193 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     if (timestamp == null) return '';
     final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
     return intl.DateFormat('hh:mm a').format(date);
+  }
+
+  Widget _buildImageMessage(String url, bool isMe) {
+    return GestureDetector(
+      onTap: () {
+        // TODO: Show full screen image
+      },
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 200),
+        width: 200,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(
+            url,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                height: 150,
+                color: Colors.grey.shade200,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                  ),
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                height: 150,
+                color: Colors.grey.shade200,
+                child: const Center(
+                  child: Icon(Icons.broken_image, color: Colors.grey),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAudioMessage(String url, bool isMe,
+      [dynamic metadata, String? messageId]) {
+    final Map<String, dynamic>? meta =
+        metadata != null ? Map<String, dynamic>.from(metadata) : null;
+    final bool isThisPlaying = _currentlyPlayingId == messageId;
+    final bool isActuallyPlaying =
+        isThisPlaying && _playerState == PlayerState.playing;
+
+    // الحصول على المدة المخزنة في metadata إذا لم تكن الرسالة قيد التشغيل حالياً أو في بدايتها
+    final int storedDurationMs = meta?['duration'] ?? 0;
+    final Duration displayDuration =
+        (isThisPlaying && _duration != Duration.zero)
+            ? _duration
+            : Duration(milliseconds: storedDurationMs);
+    final Duration displayPosition = isThisPlaying ? _position : Duration.zero;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        try {
+          debugPrint('🎯 TAP on ID: $messageId | State: ${_playerState.name}');
+
+          if (isThisPlaying) {
+            if (_playerState == PlayerState.playing) {
+              debugPrint('🛑 PAUSE command fired');
+              await _audioPlayer.pause();
+              setState(() => _playerState = PlayerState.paused);
+            } else {
+              debugPrint('▶ RESUME command fired');
+              await _audioPlayer.resume();
+              setState(() => _playerState = PlayerState.playing);
+            }
+            return;
+          }
+
+          // New Audio
+          debugPrint('🆕 NEW PLAY command fired');
+          await _audioPlayer.stop();
+
+          setState(() {
+            _currentlyPlayingId = messageId;
+            _position = Duration.zero;
+            _duration = Duration(milliseconds: storedDurationMs);
+          });
+
+          final bytes = base64Decode(url);
+          final dir = await getTemporaryDirectory();
+          final file = File('${dir.path}/audio_${messageId.hashCode}.m4a');
+          await file.writeAsBytes(bytes);
+          await _audioPlayer.play(DeviceFileSource(file.path));
+        } catch (e) {
+          debugPrint('Error: $e');
+        }
+      },
+      child: Container(
+        width: 220,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        color: Colors.transparent, // ضروري مع HitTestBehavior.opaque
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: isMe
+                      ? Colors.white.withOpacity(0.3)
+                      : AppColors.primary.withOpacity(0.1),
+                  child: Icon(
+                    isActuallyPlaying ? Icons.pause : Icons.play_arrow,
+                    color: isMe ? Colors.white : AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'رسالة صوتية ${messageId?.substring(0, 4) ?? ""}',
+                        style: TextStyle(
+                          color: isMe ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: LinearProgressIndicator(
+                          value: displayDuration.inMilliseconds > 0
+                              ? displayPosition.inMilliseconds /
+                                  displayDuration.inMilliseconds
+                              : 0.0,
+                          backgroundColor:
+                              isMe ? Colors.white24 : Colors.grey.shade200,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isMe ? Colors.white : AppColors.primary,
+                          ),
+                          minHeight: 3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 52),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _formatDuration(displayPosition),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isMe ? Colors.white70 : Colors.grey.shade600,
+                    ),
+                  ),
+                  Text(
+                    _formatDuration(displayDuration),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isMe ? Colors.white70 : Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+    return "$twoDigitMinutes:$twoDigitSeconds";
   }
 }
 

@@ -84,97 +84,91 @@ class _SlidingGradientTransform extends GradientTransform {
   }
 }
 
-/// بطاقة منتج skeleton
+/// بطاقة منتج skeleton - تصميم عمودي
 class ProductCardSkeleton extends StatelessWidget {
   const ProductCardSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.08),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 1),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.grey.shade100),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // صورة المنتج skeleton
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(8),
+          Expanded(
+            flex: 3,
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 10),
+          // معلومات المنتج skeleton
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                // عنوان المنتج
-                Container(
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // السعر
-                Container(
-                  width: 80,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // التصنيف والتاريخ
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // عنوان المنتج
+                  Container(
+                    height: 12,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                    Container(
-                      width: 50,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // زر
-                Container(
-                  width: 60,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(14),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Container(
+                    height: 12,
+                    width: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const Spacer(),
+                  // السعر
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        height: 14,
+                        width: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: const BoxDecoration(
+                          color: Colors.grey,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -183,7 +177,7 @@ class ProductCardSkeleton extends StatelessWidget {
   }
 }
 
-/// شبكة منتجات skeleton للصفحة الرئيسية
+/// شبكة منتجات skeleton للصفحة الرئيسية - تصميم عمودي
 class ProductGridSkeleton extends StatelessWidget {
   final int itemCount;
 
@@ -193,15 +187,15 @@ class ProductGridSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ShimmerLoading(
       child: GridView.builder(
-        padding: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-        scrollDirection: Axis.horizontal,
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 200,
-          childAspectRatio: 1 / 1.8,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.65,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
         itemCount: itemCount,
         itemBuilder: (context, index) {
           return const ProductCardSkeleton();

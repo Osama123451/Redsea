@@ -12,6 +12,7 @@ import 'package:redsea/services/settings_page.dart';
 import 'package:redsea/admin/fix_products_page.dart';
 import 'package:redsea/admin/admin_dashboard_page.dart';
 import 'package:redsea/app/controllers/auth_controller.dart';
+import 'package:redsea/app/controllers/favorites_controller.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -92,14 +93,19 @@ class _ProfilePageState extends State<ProfilePage> {
         _myOrdersCount = (ordersSnapshot.snapshot.value as Map).length;
       }
 
-      // عدد المفضلات
-      final favoritesSnapshot = await FirebaseDatabase.instance
-          .ref()
-          .child('favorites')
-          .child(_user!.uid)
-          .once();
-      if (favoritesSnapshot.snapshot.value != null) {
-        _favoritesCount = (favoritesSnapshot.snapshot.value as Map).length;
+      // عدد المفضلات - استخدام FavoritesController للحصول على العدد الدقيق
+      if (Get.isRegistered<FavoritesController>()) {
+        _favoritesCount = Get.find<FavoritesController>().favoritesCount;
+      } else {
+        // احتياطي في حال لم يتم حقن المتحكم
+        final favoritesSnapshot = await FirebaseDatabase.instance
+            .ref()
+            .child('favorites')
+            .child(_user!.uid)
+            .once();
+        if (favoritesSnapshot.snapshot.value != null) {
+          _favoritesCount = (favoritesSnapshot.snapshot.value as Map).length;
+        }
       }
 
       setState(() {});
@@ -127,11 +133,19 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _updateUserName(String newName) async {
     if (_user != null && newName.trim().isNotEmpty) {
       try {
+        final parts = newName.trim().split(' ');
+        final firstName = parts.first;
+        final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+
         await _dbRef.child(_user!.uid).update({
           'name': newName.trim(),
+          'firstName': firstName,
+          'lastName': lastName,
         });
         setState(() {
           _userData['name'] = newName.trim();
+          _userData['firstName'] = firstName;
+          _userData['lastName'] = lastName;
         });
         Get.snackbar('نجاح', 'تم تحديث الاسم بنجاح',
             backgroundColor: Colors.green, colorText: Colors.white);
