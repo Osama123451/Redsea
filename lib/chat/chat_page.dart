@@ -588,17 +588,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
         children: [
           Column(
             children: [
-              // Debug Status Overlay
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(4),
-                color: Colors.red.withOpacity(0.1),
-                child: Text(
-                  'DEBUG: State: ${_playerState.name} | ID: ${_currentlyPlayingId?.substring(0, 5) ?? "None"}',
-                  style: const TextStyle(fontSize: 10, color: Colors.red),
-                  textAlign: TextAlign.center,
-                ),
-              ),
               Expanded(
                 child: StreamBuilder<DatabaseEvent>(
                   stream: _messagesStream,
@@ -633,9 +622,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
                     messages.sort((a, b) =>
                         (a['timestamp'] ?? 0).compareTo(b['timestamp'] ?? 0));
-
-                    WidgetsBinding.instance
-                        .addPostFrameCallback((_) => _scrollToBottom());
 
                     return _buildMessagesList(messages);
                   },
@@ -964,86 +950,69 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onLongPress: () => _showMessageOptions(msg),
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.all(4), // Reduced padding for media
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Reply preview
-                        if (hasReply)
-                          Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
-                              child: _buildReplyInMessage(msg['replyTo'])),
-
-                        // Content based on type
-                        if (msg['type'] == 'image')
-                          _buildImageMessage(msg['text'], isMe)
-                        else if (msg['type'] == 'audio')
+              child: isAudio
+                  ? Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (hasReply)
+                            Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                child: _buildReplyInMessage(msg['replyTo'])),
                           _buildAudioMessage(
-                              msg['text'], isMe, msg['metadata'], msg['id'])
-                        else
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
-                            child: Text(
-                              EncryptionService.decrypt(msg['text'] ?? ''),
-                              style: TextStyle(
-                                color: Colors.grey.shade900,
-                                fontSize: 16,
-                                height: 1.3,
-                              ),
-                            ),
-                          ),
-
-                        const SizedBox(height: 2),
-                        // Time and read status
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              left: 10, right: 10, bottom: 6),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                              msg['text'], isMe, msg['metadata'], msg['id']),
+                          const SizedBox(height: 2),
+                          _buildMessageStatus(msg, isMe),
+                        ],
+                      ),
+                    )
+                  : Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onLongPress: () => _showMessageOptions(msg),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                _formatTime(msg['timestamp']),
-                                style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontSize: 11,
+                              if (hasReply)
+                                Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 6),
+                                    child:
+                                        _buildReplyInMessage(msg['replyTo'])),
+                              if (msg['type'] == 'image')
+                                _buildImageMessage(msg['text'], isMe)
+                              else
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 6),
+                                  child: Text(
+                                    EncryptionService.decrypt(
+                                        msg['text'] ?? ''),
+                                    style: TextStyle(
+                                      color: Colors.grey.shade900,
+                                      fontSize: 16,
+                                      height: 1.3,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              if (isMe) ...[
-                                const SizedBox(width: 4),
-                                Icon(
-                                  msg['read'] == true
-                                      ? Icons.done_all
-                                      : Icons.done,
-                                  size: 16,
-                                  color: msg['read'] == true
-                                      ? AppColors.primary
-                                      : Colors.grey.shade400,
-                                ),
-                              ],
+                              const SizedBox(height: 2),
+                              _buildMessageStatus(msg, isMe),
                             ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
             ),
           ),
         ],
       ),
     );
 
-    if (isAudio)
-      return bubble; // Skip Dismissible for audio to avoid "page shaking"
+    if (isAudio) return bubble;
 
     return Dismissible(
       key: ValueKey('dismiss_${msg['id']}'),
@@ -1058,6 +1027,62 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
         child: const Icon(Icons.reply, color: Colors.grey),
       ),
       child: bubble,
+    );
+  }
+
+  Widget _buildMessageStatus(Map<String, dynamic> msg, bool isMe) {
+    final timestamp =
+        DateTime.fromMillisecondsSinceEpoch(msg['timestamp'] ?? 0);
+    final formattedTime = intl.DateFormat('HH:mm').format(timestamp);
+
+    IconData? statusIcon;
+    Color? iconColor;
+
+    if (isMe) {
+      final status = msg['status'];
+      if (status == 'sent') {
+        statusIcon = Icons.done;
+        iconColor = Colors.grey.shade500;
+      } else if (status == 'delivered') {
+        statusIcon = Icons.done_all;
+        iconColor = Colors.grey.shade500;
+      } else if (status == 'read') {
+        statusIcon = Icons.done_all;
+        iconColor = AppColors.primary;
+      } else {
+        statusIcon = Icons.access_time; // Pending
+        iconColor = Colors.grey.shade500;
+      }
+    }
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: isMe ? 0 : 10,
+        right: isMe ? 10 : 0,
+        bottom: 4,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment:
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          Text(
+            formattedTime,
+            style: TextStyle(
+              fontSize: 10,
+              color: isMe ? Colors.grey.shade300 : Colors.grey.shade500,
+            ),
+          ),
+          if (isMe && statusIcon != null) ...[
+            const SizedBox(width: 4),
+            Icon(
+              statusIcon,
+              size: 14,
+              color: iconColor,
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -1505,7 +1530,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'رسالة صوتية ${messageId?.substring(0, 4) ?? ""}',
+                        'رسالة صوتية',
                         style: TextStyle(
                           color: isMe ? Colors.white : Colors.black87,
                           fontWeight: FontWeight.w500,
