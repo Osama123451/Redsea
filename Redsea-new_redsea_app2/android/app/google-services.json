@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "523935837025",
+    "project_id": "redsea-shop-23e0a",
+    "storage_bucket": "redsea-shop-23e0a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:523935837025:android:0c3f5c978761b536ccf320",
+        "android_client_info": {
+          "package_name": "com.example.redsea"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfV4HkWzy33k4tsEgoBh5mYI99z4u_4Vo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

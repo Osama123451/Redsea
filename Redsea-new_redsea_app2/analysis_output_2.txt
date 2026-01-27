@@ -1,0 +1,92 @@
+Analyzing redsea...                                             
+
+   info - The file name 'Basket_page.dart' isn't a lower_case_with_underscores identifier - lib\Basket_page.dart:1:1 - file_names
+   info - The file name 'NotificationsPage.dart' isn't a lower_case_with_underscores identifier - lib\NotificationsPage.dart:1:1 - file_names
+   info - The file name 'Payment_Method_Page.dart' isn't a lower_case_with_underscores identifier - lib\Payment_Method_Page.dart:1:1 - file_names
+   info - Don't use 'BuildContext's across async gaps - lib\Payment_Method_Page.dart:244:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\Payment_Method_Page.dart:253:28 - use_build_context_synchronously
+   info - The file name 'SwapSelectionPage.dart' isn't a lower_case_with_underscores identifier - lib\SwapSelectionPage.dart:1:1 - file_names
+   info - Don't invoke 'print' in production code - lib\SwapSelectionPage.dart:54:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\SwapSelectionPage.dart:67:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\SwapSelectionPage.dart:548:28 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\add_product_page.dart:743:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\add_product_page.dart:744:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\add_product_page.dart:765:30 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\add_product_page.dart:772:30 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\add_product_page.dart:780:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\add_product_page.dart:781:28 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\add_product_page.dart:811:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\add_product_page.dart:830:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\add_product_page.dart:832:9 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\add_product_page.dart:835:30 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\add_product_page.dart:860:9 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\add_product_page.dart:861:30 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\app\controllers\auth_controller.dart:48:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\app\controllers\auth_controller.dart:93:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\app\controllers\favorites_controller.dart:71:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\app\controllers\product_controller.dart:69:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\app\controllers\product_controller.dart:79:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\app\controllers\user_controller.dart:36:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\app\controllers\user_controller.dart:55:9 - avoid_print
+   info - Use 'const' with the constructor to improve performance - lib\app\core\app_theme.dart:217:11 - prefer_const_constructors
+   info - Don't invoke 'print' in production code - lib\categories_page.dart:113:7 - avoid_print
+   info - Use 'const' with the constructor to improve performance - lib\categories_page.dart:127:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\categories_page.dart:128:27 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\categories_page.dart:129:27 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\categories_page.dart:140:19 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\categories_page.dart:142:31 - prefer_const_literals_to_create_immutables
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\chat\chat_page.dart:141:32 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\favorites_page.dart:25:16 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\favorites_page.dart:27:21 - prefer_const_literals_to_create_immutables
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\favorites_page.dart:174:56 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\favorites_page.dart:179:38 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\favorites_page.dart:193:53 - deprecated_member_use
+   info - The type name 'firstpage' isn't an UpperCamelCase identifier - lib\firstpage.dart:5:7 - camel_case_types
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\homepage.dart:395:36 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\homepage.dart:830:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\login.dart:69:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\login.dart:108:7 - avoid_print
+warning - The declaration '_showSuccess' isn't referenced - lib\login.dart:123:8 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\login.dart:209:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\login.dart:465:47 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\my_products_page.dart:61:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\my_products_page.dart:74:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\my_products_page.dart:78:28 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\orders_page.dart:57:7 - avoid_print
+warning - The value of the local variable 'firstItemName' isn't used - lib\orders_page.dart:122:34 - unused_local_variable
+warning - The value of the local variable 'otherItemsCount' isn't used - lib\orders_page.dart:124:31 - unused_local_variable
+   info - Don't use 'BuildContext's across async gaps - lib\product_details_page.dart:424:52 - use_build_context_synchronously
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\search_page.dart:419:17 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\search_page.dart:550:54 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\search_page.dart:555:36 - prefer_const_constructors
+   info - Don't invoke 'print' in production code - lib\services\imgbb_service.dart:11:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\imgbb_service.dart:17:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\imgbb_service.dart:27:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\imgbb_service.dart:32:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\imgbb_service.dart:35:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\imgbb_service.dart:39:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\profile_page.dart:53:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\profile_page.dart:103:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\profile_page.dart:118:9 - avoid_print
+   info - Use 'const' with the constructor to improve performance - lib\services\profile_page.dart:191:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\services\profile_page.dart:192:19 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\services\profile_page.dart:193:19 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\services\profile_page.dart:208:15 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\services\profile_page.dart:210:27 - prefer_const_literals_to_create_immutables
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\services\profile_page.dart:235:47 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\services\profile_page.dart:244:32 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\services\profile_page.dart:289:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\services\profile_page.dart:371:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\services\profile_page.dart:382:28 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\services\profile_page.dart:419:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\services\profile_page.dart:480:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\services\profile_page.dart:531:24 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\services\profile_page.dart:645:18 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\services\profile_page.dart:647:21 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\services\profile_page.dart:648:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\services\profile_page.dart:652:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\services\profile_page.dart:656:13 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\services\settings_page.dart:148:32 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\signup.dart:140:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\signup.dart:281:57 - deprecated_member_use
+

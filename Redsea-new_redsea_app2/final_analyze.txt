@@ -1,0 +1,30 @@
+﻿Analyzing lib...                                                
+
+   info - The file name 'Basket_page.dart' isn't a lower_case_with_underscores identifier - lib\Basket_page.dart:1:1 - file_names
+   info - The file name 'NotificationsPage.dart' isn't a lower_case_with_underscores identifier - lib\NotificationsPage.dart:1:1 - file_names
+   info - The file name 'Payment_Method_Page.dart' isn't a lower_case_with_underscores identifier - lib\Payment_Method_Page.dart:1:1 - file_names
+   info - The file name 'SwapSelectionPage.dart' isn't a lower_case_with_underscores identifier - lib\SwapSelectionPage.dart:1:1 - file_names
+
+flutter : 4 issues 
+found. (ran in 
+6.3s)
+At line:1 char:1
++ flutter analyze 
+lib 2>&1 | 
+Out-File -FilePath 
+final_analyze.txt 
+-Enco ...
++ ~~~~~~~~~~~~~~~~~
+~~~~~~~
+    + CategoryInfo 
+             : No  
+  tSpecified: (4   
+  issues found.    
+ (ran in 6.3s)    
+:String) [], R    
+emoteException
+    + FullyQualifi 
+   edErrorId : Na  
+  tiveCommandErr   
+ or
+ 

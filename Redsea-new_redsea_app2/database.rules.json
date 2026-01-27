@@ -1,0 +1,388 @@
+{
+  "rules": {
+    "user_lookup": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "users": {
+      ".read": "auth != null",
+      ".indexOn": [
+        "phone",
+        "email",
+        "role",
+        "createdAt",
+        "isActive"
+      ],
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "user_devices": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "mfa_codes": {
+      "$uid": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "mfa_settings": {
+      "$uid": {
+        ".read": true,
+        ".write": "auth != null"
+      }
+    },
+    "products": {
+      ".read": true,
+      ".indexOn": [
+        "category",
+        "sellerId",
+        "userId",
+        "createdAt",
+        "price",
+        "status",
+        "isAvailableForSwap"
+      ],
+      "$productId": {
+        ".write": "auth != null"
+      }
+    },
+    "reviews": {
+      ".read": true,
+      ".write": "auth != null",
+      ".indexOn": [
+        "productId",
+        "userId",
+        "createdAt",
+        "rating",
+        "ratedUserId",
+        "raterId"
+      ],
+      "$reviewId": {
+        ".write": "auth != null"
+      }
+    },
+    "chats": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "lastMessageTime",
+        "user1Id",
+        "user2Id",
+        "lastMessage/timestamp",
+        "productId",
+        "swapId"
+      ]
+    },
+    "messages": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$chatId": {
+        ".indexOn": [
+          "timestamp",
+          "senderId",
+          "messageType"
+        ]
+      }
+    },
+    "orders": {
+      ".indexOn": [
+        "buyerId",
+        "sellerId",
+        "userId",
+        "status",
+        "createdAt",
+        "totalAmount",
+        "paymentStatus"
+      ],
+      "$orderId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "favorites": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "carts": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "swap_requests": {
+      ".read": "auth != null",
+      ".indexOn": [
+        "requesterId",
+        "targetOwnerId",
+        "status",
+        "createdAt",
+        "requesterProductId",
+        "targetProductId"
+      ],
+      "$swapId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "user_chats": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "categories": {
+      ".read": true,
+      ".write": "auth != null",
+      ".indexOn": [
+        "name",
+        "createdBy",
+        "createdAt"
+      ]
+    },
+    "notifications": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "reports": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "type",
+        "status",
+        "createdAt",
+        "userId",
+        "resolvedBy",
+        "reportDate"
+      ],
+      "$reportId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "report_exports": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "type",
+        "format",
+        "status",
+        "createdAt",
+        "adminId",
+        "dateRange"
+      ],
+      "$exportId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "report_data": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "reportType",
+        "year",
+        "month",
+        "day",
+        "exported"
+      ],
+      "$dataId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "admin_dashboard": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "statistics": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "export_history": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".indexOn": [
+          "exportDate",
+          "format",
+          "adminId"
+        ]
+      }
+    },
+    "swap_transactions": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "swapId",
+        "user1Id",
+        "user2Id",
+        "status",
+        "completedAt"
+      ],
+      "$transactionId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "swap_offers": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "productId",
+        "offeredProductId",
+        "userId",
+        "status"
+      ],
+      "$offerId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "experiences": {
+      ".read": true,
+      ".write": "auth != null",
+      ".indexOn": [
+        "category",
+        "expertId",
+        "createdAt",
+        "isAvailable",
+        "city",
+        "rating"
+      ],
+      "$experienceId": {
+        ".write": "auth != null"
+      }
+    },
+    "services": {
+      ".read": true,
+      ".indexOn": [
+        "ownerId",
+        "category",
+        "createdAt",
+        "isAvailable",
+        "estimatedValue",
+        "rating",
+        "viewsCount"
+      ],
+      "$serviceId": {
+        ".write": "auth != null",
+        "viewsCount": {
+          ".write": "auth != null"
+        },
+        "rating": {
+          ".write": "auth != null"
+        },
+        "reviewsCount": {
+          ".write": "auth != null"
+        }
+      }
+    },
+    "service_swap_requests": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "requesterId",
+        "targetOwnerId",
+        "status",
+        "timestamp",
+        "requesterServiceId",
+        "targetServiceId"
+      ],
+      "$requestId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "experience_swap_requests": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "requesterId",
+        "targetExpertId",
+        "status",
+        "timestamp",
+        "offeredExperienceId",
+        "targetExperienceId"
+      ],
+      "$swapId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "blocked_users": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "service_reviews": {
+      ".read": true,
+      ".indexOn": [
+        "serviceId",
+        "userId",
+        "timestamp",
+        "rating"
+      ],
+      "$serviceId": {
+        ".write": "auth != null",
+        "$reviewId": {
+          ".write": "auth != null"
+        }
+      }
+    },
+    "service_favorites": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "admin_notifications": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "timestamp",
+        "type",
+        "isRead"
+      ],
+      "$notificationId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "service_carts": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "service_orders": {
+      ".indexOn": [
+        "buyerId",
+        "sellerId",
+        "status",
+        "createdAt",
+        "serviceId"
+      ],
+      "$orderId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "completed_swaps": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "receiver_user_id",
+        "sender_user_id",
+        "timestamp"
+      ]
+    }
+  }
+}

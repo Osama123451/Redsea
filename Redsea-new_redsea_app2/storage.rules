@@ -1,0 +1,39 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // 1. ملفات المحادثات
+    match /chats/{chatId}/{fileName} {
+      // السماح بالقراءة لأي مستخدم مسجل
+      allow read: if request.auth != null;
+
+      // السماح بالرفع (إنشاء ملف جديد) بشروط مشددة
+      allow create: if request.auth != null
+                    // يجب أن يضع المستخدم معرفه في البيانات الوصفية (metadata)
+                    && request.resource.metadata.uploaded_by == request.auth.uid
+                    // قيود الحجم والنوع
+                    && request.resource.size < 10 * 1024 * 1024
+                    && request.resource.contentType.matches('image/.*|audio/.*|video/mp4')
+                    && fileName.matches('.*\\.(jpg|jpeg|png|gif|mp3|m4a|wav|mp4)$');
+
+      // السماح بالحذف فقط لصاحب الملف (من قام برفعه)
+      allow delete: if request.auth != null
+                    && resource.metadata.uploaded_by == request.auth.uid;
+    }
+    
+    // 2. صور الملفات الشخصية
+    match /users/{userId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null 
+                   && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*')
+                   && fileName.matches('.*\\.(jpg|jpeg|png|gif)$');
+    }
+    
+    // 3. منع أي مسارات أخرى
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

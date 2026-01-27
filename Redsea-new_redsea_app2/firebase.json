@@ -1,0 +1,41 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "redsea-shop-23e0a",
+                    "appId": "1:523935837025:android:0c3f5c978761b536ccf320",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "redsea-shop-23e0a",
+                    "configurations": {
+                        "android": "1:523935837025:android:0c3f5c978761b536ccf320",
+                        "ios": "1:523935837025:ios:87cbad353b8e080fccf320",
+                        "macos": "1:523935837025:ios:87cbad353b8e080fccf320",
+                        "web": "1:523935837025:web:c54a0c1993b54a5bccf320",
+                        "windows": "1:523935837025:web:622c7cbef4d23306ccf320"
+                    }
+                }
+            }
+        }
+    },
+    "functions": {
+        "source": "functions",
+        "codebase": "default",
+        "ignore": [
+            "node_modules",
+            ".git",
+            "firebase-debug.log",
+            "firebase-debug.*.log"
+        ]
+    },
+    "database": {
+        "rules": "database.rules.json"
+    },
+    "storage": {
+        "rules": "storage.rules"
+    }
+}

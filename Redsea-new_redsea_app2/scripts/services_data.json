@@ -1,0 +1,731 @@
+{
+    "service_design_1": {
+        "title": "تصميم شعار احترافي",
+        "description": "تصميم شعار فريد ومميز لشركتك أو مشروعك مع ملفات عالية الجودة",
+        "category": "تصميم",
+        "estimatedValue": 200,
+        "duration": "3 أيام",
+        "images": [
+            "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.8,
+        "reviewsCount": 12,
+        "viewsCount": 85,
+        "sellerLevel": "intermediate",
+        "completedOrders": 25,
+        "responseRate": 98,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "تصميم",
+            "برمجة"
+        ],
+        "isFeatured": true,
+        "isSpecialOffer": false,
+        "createdAt": 1737389100000
+    },
+    "service_design_2": {
+        "title": "تصميم هوية بصرية كاملة",
+        "description": "هوية بصرية متكاملة تشمل الشعار والألوان والخطوط والقرطاسية",
+        "category": "تصميم",
+        "estimatedValue": 600,
+        "duration": "10 أيام",
+        "images": [
+            "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.9,
+        "reviewsCount": 8,
+        "viewsCount": 62,
+        "sellerLevel": "intermediate",
+        "completedOrders": 18,
+        "responseRate": 95,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "تصميم"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": true,
+        "oldEstimatedValue": 800,
+        "createdAt": 1737389110000
+    },
+    "service_design_3": {
+        "title": "تصميم واجهات تطبيقات",
+        "description": "تصميم UI/UX احترافي لتطبيقات الموبايل والويب",
+        "category": "تصميم",
+        "estimatedValue": 500,
+        "duration": "7 أيام",
+        "images": [
+            "https://images.unsplash.com/photo-1609921212029-bb5a28e60960?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.7,
+        "reviewsCount": 15,
+        "viewsCount": 98,
+        "sellerLevel": "expert",
+        "completedOrders": 42,
+        "responseRate": 100,
+        "responseTime": "خلال 30 دقيقة",
+        "swapPreferences": [
+            "تصميم",
+            "برمجة"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": false,
+        "createdAt": 1737389120000
+    },
+    "service_programming_1": {
+        "title": "تطوير تطبيق موبايل",
+        "description": "تطوير تطبيق موبايل للأندرويد والآيفون بأحدث التقنيات",
+        "category": "برمجة",
+        "estimatedValue": 3000,
+        "duration": "30 يوم",
+        "images": [
+            "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.9,
+        "reviewsCount": 22,
+        "viewsCount": 180,
+        "sellerLevel": "expert",
+        "completedOrders": 35,
+        "responseRate": 97,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "برمجة",
+            "تصميم"
+        ],
+        "isFeatured": true,
+        "isSpecialOffer": false,
+        "createdAt": 1737389130000
+    },
+    "service_programming_2": {
+        "title": "تطوير موقع ويب متجاوب",
+        "description": "برمجة موقع ويب متجاوب مع جميع الأجهزة باستخدام React أو Vue",
+        "category": "برمجة",
+        "estimatedValue": 1200,
+        "duration": "14 يوم",
+        "images": [
+            "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.6,
+        "reviewsCount": 18,
+        "viewsCount": 145,
+        "sellerLevel": "intermediate",
+        "completedOrders": 28,
+        "responseRate": 92,
+        "responseTime": "خلال ساعتين",
+        "swapPreferences": [
+            "برمجة"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": true,
+        "oldEstimatedValue": 1500,
+        "createdAt": 1737389140000
+    },
+    "service_programming_3": {
+        "title": "إصلاح أخطاء برمجية",
+        "description": "تصحيح الأخطاء البرمجية في مشاريع الويب والموبايل",
+        "category": "برمجة",
+        "estimatedValue": 150,
+        "duration": "يوم واحد",
+        "images": [
+            "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.8,
+        "reviewsCount": 35,
+        "viewsCount": 220,
+        "sellerLevel": "expert",
+        "completedOrders": 85,
+        "responseRate": 99,
+        "responseTime": "خلال 15 دقيقة",
+        "swapPreferences": [
+            "برمجة",
+            "تصميم",
+            "كتابة وترجمة"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": false,
+        "createdAt": 1737389150000
+    },
+    "service_photography_1": {
+        "title": "تصوير منتجات احترافي",
+        "description": "تصوير منتجاتك بجودة عالية لعرضها في متجرك الإلكتروني",
+        "category": "تصوير",
+        "estimatedValue": 400,
+        "duration": "يوم واحد",
+        "images": [
+            "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.7,
+        "reviewsCount": 20,
+        "viewsCount": 110,
+        "sellerLevel": "intermediate",
+        "completedOrders": 45,
+        "responseRate": 94,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "تصوير",
+            "إنتاج صوتي ومرئي"
+        ],
+        "isFeatured": true,
+        "isSpecialOffer": false,
+        "createdAt": 1737389160000
+    },
+    "service_photography_2": {
+        "title": "تصوير مناسبات وحفلات",
+        "description": "تغطية كاملة للمناسبات والحفلات مع التحرير",
+        "category": "تصوير",
+        "estimatedValue": 1000,
+        "duration": "يوم واحد",
+        "images": [
+            "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.9,
+        "reviewsCount": 15,
+        "viewsCount": 88,
+        "sellerLevel": "expert",
+        "completedOrders": 32,
+        "responseRate": 100,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "تصوير"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": true,
+        "oldEstimatedValue": 1200,
+        "createdAt": 1737389170000
+    },
+    "service_photography_3": {
+        "title": "تصوير بورتريه شخصي",
+        "description": "جلسة تصوير بورتريه احترافية مع 10 صور معدلة",
+        "category": "تصوير",
+        "estimatedValue": 300,
+        "duration": "ساعتين",
+        "images": [
+            "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.5,
+        "reviewsCount": 28,
+        "viewsCount": 135,
+        "sellerLevel": "intermediate",
+        "completedOrders": 55,
+        "responseRate": 91,
+        "responseTime": "خلال ساعتين",
+        "swapPreferences": [
+            "تصوير",
+            "تصميم"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": false,
+        "createdAt": 1737389180000
+    },
+    "service_writing_1": {
+        "title": "كتابة محتوى تسويقي",
+        "description": "كتابة محتوى تسويقي جذاب لموقعك أو صفحات التواصل",
+        "category": "كتابة وترجمة",
+        "estimatedValue": 150,
+        "duration": "3 أيام",
+        "images": [
+            "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.6,
+        "reviewsCount": 32,
+        "viewsCount": 165,
+        "sellerLevel": "intermediate",
+        "completedOrders": 68,
+        "responseRate": 96,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "كتابة وترجمة",
+            "تسويق رقمي"
+        ],
+        "isFeatured": true,
+        "isSpecialOffer": false,
+        "createdAt": 1737389190000
+    },
+    "service_writing_2": {
+        "title": "ترجمة إنجليزي-عربي",
+        "description": "ترجمة احترافية من الإنجليزية للعربية والعكس",
+        "category": "كتابة وترجمة",
+        "estimatedValue": 100,
+        "duration": "يومين",
+        "images": [
+            "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.8,
+        "reviewsCount": 45,
+        "viewsCount": 210,
+        "sellerLevel": "expert",
+        "completedOrders": 120,
+        "responseRate": 98,
+        "responseTime": "خلال 30 دقيقة",
+        "swapPreferences": [
+            "كتابة وترجمة"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": true,
+        "oldEstimatedValue": 150,
+        "createdAt": 1737389200000
+    },
+    "service_writing_3": {
+        "title": "كتابة سيرة ذاتية",
+        "description": "كتابة سيرة ذاتية احترافية تزيد فرصك في الحصول على وظيفة",
+        "category": "كتابة وترجمة",
+        "estimatedValue": 80,
+        "duration": "يوم واحد",
+        "images": [
+            "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.7,
+        "reviewsCount": 55,
+        "viewsCount": 280,
+        "sellerLevel": "intermediate",
+        "completedOrders": 95,
+        "responseRate": 94,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "كتابة وترجمة",
+            "تدريس وتعليم"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": false,
+        "createdAt": 1737389210000
+    },
+    "service_marketing_1": {
+        "title": "إدارة حسابات التواصل",
+        "description": "إدارة كاملة لحساباتك على منصات التواصل الاجتماعي",
+        "category": "تسويق رقمي",
+        "estimatedValue": 600,
+        "duration": "شهر",
+        "images": [
+            "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.5,
+        "reviewsCount": 18,
+        "viewsCount": 125,
+        "sellerLevel": "intermediate",
+        "completedOrders": 22,
+        "responseRate": 93,
+        "responseTime": "خلال ساعتين",
+        "swapPreferences": [
+            "تسويق رقمي",
+            "كتابة وترجمة"
+        ],
+        "isFeatured": true,
+        "isSpecialOffer": false,
+        "createdAt": 1737389220000
+    },
+    "service_marketing_2": {
+        "title": "حملة إعلانية على جوجل",
+        "description": "إعداد وإدارة حملة Google Ads لزيادة المبيعات",
+        "category": "تسويق رقمي",
+        "estimatedValue": 350,
+        "duration": "أسبوع",
+        "images": [
+            "https://images.unsplash.com/photo-1533750516457-a7f992034fec?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.8,
+        "reviewsCount": 25,
+        "viewsCount": 155,
+        "sellerLevel": "expert",
+        "completedOrders": 38,
+        "responseRate": 97,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "تسويق رقمي"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": true,
+        "oldEstimatedValue": 400,
+        "createdAt": 1737389230000
+    },
+    "service_marketing_3": {
+        "title": "تحسين SEO للموقع",
+        "description": "تحسين موقعك لمحركات البحث وزيادة الظهور في النتائج",
+        "category": "تسويق رقمي",
+        "estimatedValue": 500,
+        "duration": "15 يوم",
+        "images": [
+            "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.6,
+        "reviewsCount": 20,
+        "viewsCount": 140,
+        "sellerLevel": "intermediate",
+        "completedOrders": 30,
+        "responseRate": 95,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "تسويق رقمي",
+            "برمجة"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": false,
+        "createdAt": 1737389240000
+    },
+    "service_maintenance_1": {
+        "title": "صيانة أجهزة كمبيوتر",
+        "description": "صيانة وإصلاح أجهزة الكمبيوتر واللابتوب",
+        "category": "صيانة وإصلاح",
+        "estimatedValue": 100,
+        "duration": "يوم واحد",
+        "images": [
+            "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.4,
+        "reviewsCount": 42,
+        "viewsCount": 195,
+        "sellerLevel": "intermediate",
+        "completedOrders": 75,
+        "responseRate": 92,
+        "responseTime": "خلال ساعتين",
+        "swapPreferences": [
+            "صيانة وإصلاح"
+        ],
+        "isFeatured": true,
+        "isSpecialOffer": false,
+        "createdAt": 1737389250000
+    },
+    "service_maintenance_2": {
+        "title": "صيانة هواتف ذكية",
+        "description": "إصلاح شاشات وبطاريات ومشاكل البرمجيات للهواتف",
+        "category": "صيانة وإصلاح",
+        "estimatedValue": 80,
+        "duration": "ساعتين",
+        "images": [
+            "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.7,
+        "reviewsCount": 58,
+        "viewsCount": 245,
+        "sellerLevel": "expert",
+        "completedOrders": 110,
+        "responseRate": 98,
+        "responseTime": "خلال 30 دقيقة",
+        "swapPreferences": [
+            "صيانة وإصلاح",
+            "برمجة"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": true,
+        "oldEstimatedValue": 120,
+        "createdAt": 1737389260000
+    },
+    "service_maintenance_3": {
+        "title": "صيانة أجهزة منزلية",
+        "description": "صيانة الثلاجات والغسالات والمكيفات في منزلك",
+        "category": "صيانة وإصلاح",
+        "estimatedValue": 150,
+        "duration": "يوم واحد",
+        "images": [
+            "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.5,
+        "reviewsCount": 35,
+        "viewsCount": 175,
+        "sellerLevel": "intermediate",
+        "completedOrders": 62,
+        "responseRate": 90,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "صيانة وإصلاح"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": false,
+        "createdAt": 1737389270000
+    },
+    "service_teaching_1": {
+        "title": "دروس خصوصية رياضيات",
+        "description": "دروس خصوصية في الرياضيات لجميع المراحل الدراسية",
+        "category": "تدريس وتعليم",
+        "estimatedValue": 50,
+        "duration": "ساعة",
+        "images": [
+            "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.8,
+        "reviewsCount": 65,
+        "viewsCount": 320,
+        "sellerLevel": "expert",
+        "completedOrders": 150,
+        "responseRate": 99,
+        "responseTime": "خلال 15 دقيقة",
+        "swapPreferences": [
+            "تدريس وتعليم"
+        ],
+        "isFeatured": true,
+        "isSpecialOffer": false,
+        "createdAt": 1737389280000
+    },
+    "service_teaching_2": {
+        "title": "تعليم اللغة الإنجليزية",
+        "description": "دروس محادثة وقواعد إنجليزية مع مدرس متخصص",
+        "category": "تدريس وتعليم",
+        "estimatedValue": 60,
+        "duration": "ساعة",
+        "images": [
+            "https://images.unsplash.com/photo-1577896851231-70ef18881754?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.9,
+        "reviewsCount": 78,
+        "viewsCount": 385,
+        "sellerLevel": "expert",
+        "completedOrders": 180,
+        "responseRate": 100,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "تدريس وتعليم",
+            "كتابة وترجمة"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": true,
+        "oldEstimatedValue": 80,
+        "createdAt": 1737389290000
+    },
+    "service_teaching_3": {
+        "title": "دورة برمجة للمبتدئين",
+        "description": "تعلم أساسيات البرمجة من الصفر خطوة بخطوة",
+        "category": "تدريس وتعليم",
+        "estimatedValue": 300,
+        "duration": "10 جلسات",
+        "images": [
+            "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.7,
+        "reviewsCount": 42,
+        "viewsCount": 250,
+        "sellerLevel": "intermediate",
+        "completedOrders": 55,
+        "responseRate": 95,
+        "responseTime": "خلال ساعتين",
+        "swapPreferences": [
+            "تدريس وتعليم",
+            "برمجة"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": false,
+        "createdAt": 1737389300000
+    },
+    "service_media_1": {
+        "title": "تعليق صوتي احترافي",
+        "description": "تسجيل تعليق صوتي بجودة استوديو لإعلاناتك",
+        "category": "إنتاج صوتي ومرئي",
+        "estimatedValue": 200,
+        "duration": "يومين",
+        "images": [
+            "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.6,
+        "reviewsCount": 28,
+        "viewsCount": 145,
+        "sellerLevel": "intermediate",
+        "completedOrders": 42,
+        "responseRate": 94,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "إنتاج صوتي ومرئي"
+        ],
+        "isFeatured": true,
+        "isSpecialOffer": false,
+        "createdAt": 1737389310000
+    },
+    "service_media_2": {
+        "title": "مونتاج فيديو احترافي",
+        "description": "مونتاج وتحرير فيديوهات بتأثيرات سينمائية",
+        "category": "إنتاج صوتي ومرئي",
+        "estimatedValue": 300,
+        "duration": "3 أيام",
+        "images": [
+            "https://images.unsplash.com/photo-1574717024453-354056aae928?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.8,
+        "reviewsCount": 35,
+        "viewsCount": 185,
+        "sellerLevel": "expert",
+        "completedOrders": 65,
+        "responseRate": 97,
+        "responseTime": "خلال 30 دقيقة",
+        "swapPreferences": [
+            "إنتاج صوتي ومرئي",
+            "تصوير"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": true,
+        "oldEstimatedValue": 350,
+        "createdAt": 1737389320000
+    },
+    "service_media_3": {
+        "title": "إنتاج موسيقى إعلانية",
+        "description": "تأليف موسيقى أصلية لإعلاناتك وفيديوهاتك",
+        "category": "إنتاج صوتي ومرئي",
+        "estimatedValue": 500,
+        "duration": "5 أيام",
+        "images": [
+            "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.9,
+        "reviewsCount": 18,
+        "viewsCount": 120,
+        "sellerLevel": "expert",
+        "completedOrders": 28,
+        "responseRate": 100,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "إنتاج صوتي ومرئي"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": false,
+        "createdAt": 1737389330000
+    },
+    "service_other_1": {
+        "title": "استشارات أعمال",
+        "description": "استشارات في تطوير الأعمال والتخطيط الاستراتيجي",
+        "category": "أخرى",
+        "estimatedValue": 300,
+        "duration": "ساعة",
+        "images": [
+            "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.7,
+        "reviewsCount": 22,
+        "viewsCount": 135,
+        "sellerLevel": "expert",
+        "completedOrders": 35,
+        "responseRate": 96,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "أخرى",
+            "تسويق رقمي"
+        ],
+        "isFeatured": true,
+        "isSpecialOffer": false,
+        "createdAt": 1737389340000
+    },
+    "service_other_2": {
+        "title": "خدمات إدارية عن بعد",
+        "description": "مساعد افتراضي للمهام الإدارية والتنظيمية",
+        "category": "أخرى",
+        "estimatedValue": 200,
+        "duration": "يومياً",
+        "images": [
+            "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.5,
+        "reviewsCount": 30,
+        "viewsCount": 165,
+        "sellerLevel": "intermediate",
+        "completedOrders": 48,
+        "responseRate": 93,
+        "responseTime": "خلال ساعتين",
+        "swapPreferences": [
+            "أخرى",
+            "كتابة وترجمة"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": true,
+        "oldEstimatedValue": 250,
+        "createdAt": 1737389350000
+    },
+    "service_other_3": {
+        "title": "تنسيق مناسبات",
+        "description": "تنظيم وتنسيق حفلات ومناسبات خاصة",
+        "category": "أخرى",
+        "estimatedValue": 1000,
+        "duration": "حسب المناسبة",
+        "images": [
+            "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400"
+        ],
+        "ownerId": "771727798",
+        "ownerName": "ahmed000",
+        "isAvailable": true,
+        "rating": 4.8,
+        "reviewsCount": 15,
+        "viewsCount": 95,
+        "sellerLevel": "intermediate",
+        "completedOrders": 20,
+        "responseRate": 98,
+        "responseTime": "خلال ساعة",
+        "swapPreferences": [
+            "أخرى",
+            "تصوير"
+        ],
+        "isFeatured": false,
+        "isSpecialOffer": false,
+        "createdAt": 1737389360000
+    }
+}

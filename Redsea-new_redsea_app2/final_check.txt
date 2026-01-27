@@ -1,0 +1,34 @@
+﻿Analyzing lib...                                                
+
+   info - The file name 'Basket_page.dart' isn't a lower_case_with_underscores identifier - lib\Basket_page.dart:1:1 - file_names
+   info - The file name 'NotificationsPage.dart' isn't a lower_case_with_underscores identifier - lib\NotificationsPage.dart:1:1 - file_names
+   info - The file name 'Payment_Method_Page.dart' isn't a lower_case_with_underscores identifier - lib\Payment_Method_Page.dart:1:1 - file_names
+   info - The file name 'SwapSelectionPage.dart' isn't a lower_case_with_underscores identifier - lib\SwapSelectionPage.dart:1:1 - file_names
+warning - Unused import: 'package:redsea/app/bindings/profile_binding.dart' - lib\app\routes\app_pages.dart:8:8 - unused_import
+warning - Unused import: 'package:redsea/app/bindings/notifications_binding.dart' - lib\app\routes\app_pages.dart:9:8 - unused_import
+warning - Unused import: 'package:redsea/app/bindings/orders_binding.dart' - lib\app\routes\app_pages.dart:10:8 - unused_import
+warning - Unused import: 'package:redsea/app/bindings/chat_binding.dart' - lib\app\routes\app_pages.dart:11:8 - unused_import
+
+flutter : 8 issues 
+found. (ran in 
+6.7s)
+At line:1 char:1
++ flutter analyze 
+lib 2>&1 | 
+Out-File -FilePath 
+final_check.txt 
+-Encodi ...
++ ~~~~~~~~~~~~~~~~~
+~~~~~~~
+    + CategoryInfo 
+             : No  
+  tSpecified: (8   
+  issues found.    
+ (ran in 6.7s)    
+:String) [], R    
+emoteException
+    + FullyQualifi 
+   edErrorId : Na  
+  tiveCommandErr   
+ or
+ 

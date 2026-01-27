@@ -1,0 +1,84 @@
+﻿Running Gradle task 'assembleDebug'...                          
+flutter : warning: 
+[options] source 
+value 8 is 
+obsolete and will 
+be removed in a 
+future release
+At line:1 char:1
++ flutter build 
+apk --debug 2>&1 | 
+Out-File -FilePath 
+build_errors.txt  
+...
++ ~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo 
+             : No  
+  tSpecified: (w   
+ arning: [optio    
+... future rel    
+ease:String) [    
+], RemoteExcep    
+tion
+    + FullyQualifi 
+   edErrorId : Na  
+  tiveCommandErr   
+ or
+ 
+warning: [options] 
+target value 8 is 
+obsolete and will 
+be removed in a 
+future release
+warning: [options] 
+To suppress 
+warnings about 
+obsolete options, 
+use 
+-Xlint:-options.
+3 warnings
+warning: [options] 
+source value 8 is 
+obsolete and will 
+be removed in a 
+future release
+warning: [options] 
+target value 8 is 
+obsolete and will 
+be removed in a 
+future release
+warning: [options] 
+To suppress 
+warnings about 
+obsolete options, 
+use 
+-Xlint:-options.
+Note: Some input 
+files use or 
+override a 
+deprecated API.
+Note: Recompile 
+with 
+-Xlint:deprecation 
+for details.
+3 warnings
+warning: [options] 
+source value 8 is 
+obsolete and will 
+be removed in a 
+future release
+warning: [options] 
+target value 8 is 
+obsolete and will 
+be removed in a 
+future release
+warning: [options] 
+To suppress 
+warnings about 
+obsolete options, 
+use 
+-Xlint:-options.
+3 warnings
+Running Gradle task 'assembleDebug'...                            489.3s
+ΓêÜ Built build\app\outputs\flutter-apk\app-debug.apk

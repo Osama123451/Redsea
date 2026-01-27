@@ -1,0 +1,8 @@
+﻿Analyzing lib...
+
+   info - Basket_page.dart:1:1 - The file name 'Basket_page.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - NotificationsPage.dart:1:1 - The file name 'NotificationsPage.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - Payment_Method_Page.dart:1:1 - The file name 'Payment_Method_Page.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - SwapSelectionPage.dart:1:1 - The file name 'SwapSelectionPage.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+
+4 issues found.
