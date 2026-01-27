@@ -119,9 +119,19 @@ class _SwapRequestsPageState extends State<SwapRequestsPage>
         controller: _tabController,
         children: [
           // الطلبات الواردة
-          _buildRequestsList(isIncoming: true),
+          Column(
+            children: [
+              _buildDeleteAllHeader(isIncoming: true),
+              Expanded(child: _buildRequestsList(isIncoming: true)),
+            ],
+          ),
           // الطلبات المرسلة
-          _buildRequestsList(isIncoming: false),
+          Column(
+            children: [
+              _buildDeleteAllHeader(isIncoming: false),
+              Expanded(child: _buildRequestsList(isIncoming: false)),
+            ],
+          ),
         ],
       ),
     );
@@ -305,6 +315,17 @@ class _SwapRequestsPageState extends State<SwapRequestsPage>
                   DateFormat('yyyy/MM/dd HH:mm').format(request.timestamp),
                   style: TextStyle(color: Colors.grey[500], fontSize: 11),
                 ),
+                if (request.status == 'accepted' ||
+                    request.status == 'rejected' ||
+                    request.status == 'cancelled')
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline,
+                        color: Colors.red, size: 20),
+                    onPressed: () =>
+                        _confirmDeleteExperienceRequest(request.id),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
               ],
             ),
             const SizedBox(height: 16),
@@ -469,21 +490,34 @@ class _SwapRequestsPageState extends State<SwapRequestsPage>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // حالة الطلب
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: request.statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  request.statusText,
-                  style: TextStyle(
-                    color: request.statusColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+              Row(
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: request.statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      request.statusText,
+                      style: TextStyle(
+                        color: request.statusColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
-                ),
+                  if (request.status == 'completed' ||
+                      request.status == 'rejected' ||
+                      request.status == 'cancelled')
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline,
+                          color: Colors.red, size: 20),
+                      onPressed: () => _confirmDeleteSwapRequest(
+                          request.id, request.status == 'completed'),
+                    ),
+                ],
               ),
               // أيقونة المقايضة
               Container(
@@ -1089,6 +1123,116 @@ class _SwapRequestsPageState extends State<SwapRequestsPage>
         ],
       ),
       barrierDismissible: false,
+    );
+  }
+
+  Widget _buildDeleteAllHeader({required bool isIncoming}) {
+    return Obx(() {
+      bool hasCompleted = false;
+      if (_selectedCategory == 'products') {
+        final list = isIncoming
+            ? swapController.incomingRequests
+            : swapController.outgoingRequests;
+        hasCompleted = list.any((r) =>
+            r.status == 'completed' ||
+            r.status == 'rejected' ||
+            r.status == 'cancelled');
+      } else {
+        final list = isIncoming
+            ? experienceSwapController.incomingRequests
+            : experienceSwapController.outgoingRequests;
+        hasCompleted = list.any((r) =>
+            r.status == 'accepted' ||
+            r.status == 'rejected' ||
+            r.status == 'cancelled');
+      }
+
+      if (!hasCompleted) return const SizedBox.shrink();
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton.icon(
+              onPressed: () => _confirmClearAll(isIncoming),
+              icon: const Icon(Icons.delete_sweep, color: Colors.red),
+              label: const Text('حذف الكل المنتهي',
+                  style: TextStyle(color: Colors.red)),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red.withValues(alpha: 0.05),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  void _confirmDeleteExperienceRequest(String requestId) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('حذف الطلب'),
+        content: const Text('هل أنت متأكد من حذف هذا طلب تبادل الخبرات؟'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('إلغاء')),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              experienceSwapController.deleteRequest(requestId);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('حذف', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteSwapRequest(String id, bool isArchived) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('حذف الطلب'),
+        content: const Text('هل أنت متأكد من حذف هذا الطلب؟'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('إلغاء')),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              swapController.deleteSwapRequest(id, isArchived: isArchived);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('حذف', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmClearAll(bool isIncoming) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('حذف الجميع'),
+        content: const Text('هل أنت متأكد من حذف جميع الطلبات المنتهية؟'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('إلغاء')),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              if (_selectedCategory == 'products') {
+                swapController.clearSwapRequests(isIncoming);
+              } else {
+                experienceSwapController.clearRequests(isIncoming);
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child:
+                const Text('حذف الكل', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
 }

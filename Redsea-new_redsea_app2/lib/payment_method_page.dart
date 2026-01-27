@@ -782,6 +782,9 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
           'quantity': item.quantity,
           'totalPrice': item.totalPrice,
           'sellerId': item.ownerId,
+          'imageUrl': (item.images != null && item.images!.isNotEmpty)
+              ? item.images!.first
+              : '',
         };
       }).toList();
 

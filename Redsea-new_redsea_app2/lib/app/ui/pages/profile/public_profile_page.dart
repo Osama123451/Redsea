@@ -9,6 +9,9 @@ import 'package:redsea/app/ui/dialogs/add_review_dialog.dart';
 import 'package:redsea/product_model.dart';
 import 'package:redsea/product_details_page.dart';
 import 'package:redsea/app/controllers/cart_controller.dart';
+import 'package:redsea/app/controllers/auth_controller.dart';
+import 'package:redsea/services/chat_service.dart';
+import 'package:redsea/chat/chat_page.dart';
 
 /// صفحة الملف الشخصي العام للمستخدم
 class PublicProfilePage extends StatefulWidget {
@@ -150,6 +153,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                   child: NestedScrollView(
                     headerSliverBuilder: (context, innerBoxIsScrolled) => [
                       SliverToBoxAdapter(child: _buildProfileHeader()),
+                      SliverToBoxAdapter(child: _buildContactSection()),
                       SliverToBoxAdapter(child: _buildStatsRow()),
                       SliverPersistentHeader(
                         pinned: true,
@@ -194,6 +198,126 @@ class _PublicProfilePageState extends State<PublicProfilePage>
             )
           : null,
     );
+  }
+
+  Widget _buildContactSection() {
+    if (_userProfile == null) return const SizedBox.shrink();
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final isNotMe = currentUser != null && currentUser.uid != widget.userId;
+
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        children: [
+          if (_userProfile?.phone != null && _userProfile!.phone!.isNotEmpty)
+            _buildContactItem(
+              icon: Icons.phone,
+              title: 'رقم الهاتف',
+              value: _userProfile!.phone!,
+              color: Colors.green,
+            ),
+          if (_userProfile?.email != null &&
+              _userProfile!.email!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildContactItem(
+              icon: Icons.email,
+              title: 'البريد الإلكتروني',
+              value: _userProfile!.email!,
+              color: Colors.blue,
+            ),
+          ],
+          if (isNotMe) ...[
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _startChat,
+                icon: const Icon(Icons.chat_bubble_outline),
+                label: const Text('إرسال رسالة'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactItem({
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color color,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            ),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<void> _startChat() async {
+    final authController = Get.find<AuthController>();
+    if (!authController.requireLogin(message: 'سجّل دخولك لمراسلة المستخدم')) {
+      return;
+    }
+
+    try {
+      Get.snackbar(
+        'جاري التحميل...',
+        'يتم فتح المحادثة',
+        showProgressIndicator: true,
+        duration: const Duration(seconds: 2),
+      );
+
+      String chatId = await ChatService().createOrGetChat(
+        widget.userId,
+        'profile_${widget.userId}', // استخدام معرف الملف الشخصي كمعرف منتج عام
+      );
+
+      Get.to(() => ChatPage(
+            chatId: chatId,
+            otherUserId: widget.userId,
+            otherUserName: _userProfile?.name ?? 'مستخدم',
+          ));
+    } catch (e) {
+      Get.snackbar(
+        'خطأ',
+        'فشل فتح المحادثة: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
   Widget _buildProfileHeader() {

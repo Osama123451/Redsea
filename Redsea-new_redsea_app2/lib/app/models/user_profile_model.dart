@@ -11,6 +11,7 @@ class UserProfile {
   final int swapsCount; // عدد المقايضات المكتملة
   final int reviewsCount; // عدد التقييمات المستلمة
   final int productsCount; // عدد المنتجات المعروضة
+  final String? phone; // رقم الهاتف
   final String? verificationRejectionReason; // سبب رفض توثيق الحساب إن وجد
 
   UserProfile({
@@ -24,6 +25,7 @@ class UserProfile {
     this.swapsCount = 0,
     this.reviewsCount = 0,
     this.productsCount = 0,
+    this.phone,
     this.verificationRejectionReason,
   });
 
@@ -44,6 +46,7 @@ class UserProfile {
       swapsCount: map['swapsCount'] ?? 0,
       reviewsCount: map['reviewsCount'] ?? 0,
       productsCount: map['productsCount'] ?? 0,
+      phone: map['phone'],
       verificationRejectionReason: map['verificationRejectionReason'],
     );
   }
@@ -60,6 +63,7 @@ class UserProfile {
       'swapsCount': swapsCount,
       'reviewsCount': reviewsCount,
       'productsCount': productsCount,
+      'phone': phone,
       'verificationRejectionReason': verificationRejectionReason,
     };
   }

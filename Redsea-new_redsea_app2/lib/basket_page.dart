@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:redsea/app/controllers/cart_controller.dart';
-import 'package:redsea/payment_method_page.dart';
+import 'package:redsea/app/routes/app_routes.dart';
 import 'package:redsea/product_model.dart';
 
 /// صفحة السلة - تعرض المنتجات المضافة للسلة مع إمكانية التعديل والحذف
@@ -295,9 +295,10 @@ class BasketPage extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Get.to(() => PaymentMethodPage(
-                        cartItems: cartController.cartItems.toList(),
-                      ));
+                  Get.toNamed(
+                    AppRoutes.payment,
+                    arguments: cartController.cartItems.toList(),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,

@@ -1089,4 +1089,66 @@ class ServiceController extends GetxController {
         return status;
     }
   }
+
+  /// حذف طلب تبادل خدمة معين
+  Future<bool> deleteSwapRequest(String id) async {
+    try {
+      await _dbRef.child('service_swap_requests/$id').remove();
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting service swap request: $e');
+      return false;
+    }
+  }
+
+  /// حذف جميع طلبات تبادل الخدمات المنتهية
+  Future<void> clearSwapRequests(bool isIncoming) async {
+    try {
+      final list = isIncoming ? incomingRequests : outgoingRequests;
+      final toDelete = list
+          .where((r) =>
+              r.status == 'accepted' ||
+              r.status == 'rejected' ||
+              r.status == 'cancelled')
+          .toList();
+
+      for (var request in toDelete) {
+        await deleteSwapRequest(request.id);
+      }
+      Get.snackbar('نجاح', 'تم تنظيف قائمة الطلبات');
+    } catch (e) {
+      debugPrint('Error clearing service swap requests: $e');
+    }
+  }
+
+  /// حذف طلب شراء خدمة
+  Future<bool> deleteServiceOrder(String orderId) async {
+    try {
+      await _dbRef.child('service_orders/$orderId').remove();
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting service order: $e');
+      return false;
+    }
+  }
+
+  /// حذف جميع طلبات شراء الخدمات المكتملة أو الملغاة
+  Future<void> clearServiceOrders(bool isSeller) async {
+    try {
+      final list = isSeller ? sellerServiceOrders : serviceOrders;
+      final toDelete = list
+          .where((o) =>
+              o['status'] == 'completed' ||
+              o['status'] == 'cancelled' ||
+              o['status'] == 'rejected')
+          .toList();
+
+      for (var order in toDelete) {
+        await deleteServiceOrder(order['id']);
+      }
+      Get.snackbar('نجاح', 'تم تنظيف قائمة الطلبات');
+    } catch (e) {
+      debugPrint('Error clearing service orders: $e');
+    }
+  }
 }

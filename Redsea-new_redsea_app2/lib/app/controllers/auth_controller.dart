@@ -257,9 +257,18 @@ class AuthController extends GetxController {
   /// تسجيل الخروج
   Future<void> logout() async {
     try {
-      await _auth.signOut();
-      userData.clear();
+      isLoading.value = true;
 
+      // إيقاف أي مستمعين نشطين إذا لزم الأمر
+      // معظم الكنترولرز تستمع لـ authStateChanges وتتوقف تلقائياً
+
+      // Cancel auth listeners first to prevent permission errors
+      await _auth.signOut().timeout(const Duration(seconds: 5));
+
+      userData.clear();
+      isGuestMode.value = false;
+
+      // التنظيف اليدوي للبيانات المؤقتة
       try {
         if (Get.isRegistered<CartController>()) {
           Get.find<CartController>().clearCart();
@@ -267,19 +276,34 @@ class AuthController extends GetxController {
         if (Get.isRegistered<FavoritesController>()) {
           Get.find<FavoritesController>().clearLocal();
         }
-        // ChatController و NotificationsController يتعاملان مع التنظيف تلقائياً
-        // عبر authStateChanges listener
       } catch (e) {
-        debugPrint('Error clearing controllers: $e');
+        debugPrint('Error clearing local data during logout: $e');
       }
 
-      // تأخير قصير للسماح بتنظيف الـ subscriptions قبل الانتقال
+      // Small delay to allow listeners to settle
       await Future.delayed(const Duration(milliseconds: 100));
 
+      // الانتقال لصفحة تسجيل الدخول ومسح كل السجل
       Get.offAllNamed(AppRoutes.login);
-      Get.snackbar('نجاح', 'تم تسجيل الخروج');
+
+      Get.snackbar(
+        'نجاح',
+        'تم تسجيل الخروج بنجاح',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
     } catch (e) {
-      Get.snackbar('خطأ', 'خطأ في تسجيل الخروج: $e');
+      debugPrint('Logout error: $e');
+      Get.snackbar(
+        'خطأ',
+        'فشل تسجيل الخروج: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 

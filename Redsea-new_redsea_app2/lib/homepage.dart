@@ -9,6 +9,7 @@ import 'package:redsea/app/controllers/chat_controller.dart';
 import 'package:redsea/app/controllers/notifications_controller.dart';
 import 'package:redsea/app/controllers/categories_controller.dart';
 import 'package:redsea/app/controllers/navigation_controller.dart';
+import 'package:redsea/app/controllers/orders_controller.dart';
 import 'package:redsea/product_model.dart';
 import 'package:redsea/product_details_page.dart';
 import 'package:redsea/add_product_page.dart';
@@ -70,6 +71,8 @@ class _HomePageState extends State<HomePage> {
       Get.put(NavigationController());
     if (!Get.isRegistered<ExperiencesController>())
       Get.put(ExperiencesController());
+    if (!Get.isRegistered<OrdersController>())
+      Get.put(OrdersController(), permanent: true);
 
     productController = Get.find<ProductController>();
     cartController = Get.find<CartController>();

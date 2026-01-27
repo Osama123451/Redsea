@@ -534,11 +534,10 @@ class _NotificationPageState extends State<NotificationPage>
       case 'order':
       case 'orderComplete':
       case 'orderPending':
-        final orderId = notification['orderId'];
-        if (orderId != null) {
-          // Navigate to order details
-          // Get.toNamed(AppRoutes.orders);
-        }
+        // الانتقال لصفحة الطلبات مع تحديد التبويب حسب الدور (مشترٍ أو بائع)
+        // عادة الإشعارات 'order' الجديدة تصل للبائع، لذا نفتح تبويب الطلبات الواردة
+        bool isSeller = type == 'order';
+        Get.toNamed('/orders', arguments: {'initialTab': isSeller ? 1 : 0});
         break;
       case 'swap':
       case 'swap_incoming':

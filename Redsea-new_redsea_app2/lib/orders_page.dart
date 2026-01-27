@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:redsea/app/controllers/orders_controller.dart';
 import 'package:redsea/app/core/app_theme.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 /// صفحة الطلبات - تبويب للمشتري وتبويب للبائع
 class OrdersPage extends StatefulWidget {
@@ -20,7 +22,14 @@ class _OrdersPageState extends State<OrdersPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    // التحقق من التبويب المبدئي (من الإشعارات)
+    int initialTab = 0;
+    if (Get.arguments != null && Get.arguments is Map) {
+      initialTab = Get.arguments['initialTab'] ?? 0;
+    }
+
+    _tabController =
+        TabController(length: 2, vsync: this, initialIndex: initialTab);
     // Ensure controller is registered
     if (Get.isRegistered<OrdersController>()) {
       _ordersController = Get.find<OrdersController>();
@@ -133,9 +142,19 @@ class _OrdersPageState extends State<OrdersPage>
         controller: _tabController,
         children: [
           // تبويب طلباتي (كمشتري)
-          _buildBuyerOrdersTab(),
+          Column(
+            children: [
+              _buildDeleteAllHeader(false),
+              Expanded(child: _buildBuyerOrdersTab()),
+            ],
+          ),
           // تبويب طلبات واردة (كبائع)
-          _buildSellerOrdersTab(),
+          Column(
+            children: [
+              _buildDeleteAllHeader(true),
+              Expanded(child: _buildSellerOrdersTab()),
+            ],
+          ),
         ],
       ),
     );
@@ -257,26 +276,32 @@ class _OrdersPageState extends State<OrdersPage>
           ),
         ),
         children: [
+          _buildDeleteAllHeader(false),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('المنتجات:',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                ...items.map((item) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('- ${item['name']} (x${item['quantity'] ?? 1})'),
-                          Text('${item['price']} ر.ي'),
-                        ],
-                      ),
-                    )),
+                ...items.map(
+                    (item) => _buildItemRow(Map<String, dynamic>.from(item))),
                 const Divider(),
-                Text(
-                    'طريقة الدفع: ${_getPaymentMethodName(order['paymentMethod'])}'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                        'طريقة الدفع: ${_getPaymentMethodName(order['paymentMethod'])}'),
+                    if (status == 'delivered' ||
+                        status == 'cancelled' ||
+                        status == 'payment_rejected' ||
+                        status == 'refunded')
+                      IconButton(
+                        icon:
+                            const Icon(Icons.delete_outline, color: Colors.red),
+                        onPressed: () => _confirmDeleteOrder(order['id']),
+                        tooltip: 'حذف الطلب',
+                      ),
+                  ],
+                ),
                 if (order['transactionNumber'] != null)
                   Text('رقم العملية: ${order['transactionNumber']}'),
               ],
@@ -332,9 +357,25 @@ class _OrdersPageState extends State<OrdersPage>
                         ),
                       ),
                     ),
-                    Text(
-                      'طلب #${order['id'].toString().substring(1, 6)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        if (status == 'delivered' ||
+                            status == 'cancelled' ||
+                            status == 'payment_rejected' ||
+                            status == 'refunded')
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline,
+                                color: Colors.red, size: 20),
+                            onPressed: () => _confirmDeleteOrder(order['id']),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'طلب #${order['id'].toString().substring(1, 6)}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -368,18 +409,8 @@ class _OrdersPageState extends State<OrdersPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('المنتجات:',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                ...items.map((item) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('- ${item['name']} (x${item['quantity'] ?? 1})'),
-                          Text('${item['price']} ر.ي'),
-                        ],
-                      ),
-                    )),
+                ...items.map(
+                    (item) => _buildItemRow(Map<String, dynamic>.from(item))),
                 const Divider(),
                 Text(
                     'طريقة الدفع: ${_getPaymentMethodName(order['paymentMethod'])}'),
@@ -389,6 +420,9 @@ class _OrdersPageState extends State<OrdersPage>
               ],
             ),
           ),
+
+          // معلومات المشتري (للبائع فقط)
+          _buildBuyerInfoSection(order),
 
           // معلومات إثبات الدفع
           if (order['transactionNumber'] != null ||
@@ -652,6 +686,259 @@ class _OrdersPageState extends State<OrdersPage>
           snackPosition: SnackPosition.BOTTOM,
         );
       }
+    }
+  }
+
+  Widget _buildItemRow(Map<String, dynamic> item) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          // صورة المنتج
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 50,
+              height: 50,
+              color: Colors.grey.shade100,
+              child: item['imageUrl'] != null &&
+                      item['imageUrl'].toString().isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: item['imageUrl'],
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2)),
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.image_not_supported, size: 20),
+                    )
+                  : const Icon(Icons.image, color: Colors.grey),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // اسم المنتج والكمية
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item['name'] ?? 'منتج',
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  'الكمية: ${item['quantity'] ?? 1}',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          // السعر
+          Text(
+            '${item['price']} ر.ي',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBuyerInfoSection(Map<String, dynamic> order) {
+    final buyerName = order['buyerName'] ?? 'مشتري';
+    final buyerPhone = order['buyerPhone'] ?? '';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.person, size: 18, color: Colors.blue),
+              SizedBox(width: 8),
+              Text(
+                'بيانات المشتري',
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.blue.shade100,
+                child: Text(
+                  buyerName.isNotEmpty ? buyerName[0].toUpperCase() : 'M',
+                  style: const TextStyle(
+                      color: Colors.blue, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      buyerName,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    if (buyerPhone.isNotEmpty)
+                      Text(
+                        buyerPhone,
+                        style:
+                            const TextStyle(fontSize: 13, color: Colors.grey),
+                      ),
+                  ],
+                ),
+              ),
+              // أزرار التواصل
+              Row(
+                children: [
+                  _buildContactButton(
+                    icon: Icons.chat_outlined,
+                    color: Colors.blue,
+                    onTap: () => _startChatWithBuyer(order),
+                  ),
+                  const SizedBox(width: 8),
+                  if (buyerPhone.isNotEmpty)
+                    _buildContactButton(
+                      icon: Icons.phone_outlined,
+                      color: Colors.green,
+                      onTap: () {
+                        // نحن بحاجة لـ url_launcher لإجراء المكالمات
+                        Get.snackbar('تنبيه', 'جاري طلب الرقم: $buyerPhone');
+                      },
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteAllHeader(bool isSeller) {
+    return Obx(() {
+      final list =
+          isSeller ? _ordersController.sellerOrders : _ordersController.orders;
+      final hasCompleted = list.any((o) =>
+          o['status'] == 'delivered' ||
+          o['status'] == 'cancelled' ||
+          o['status'] == 'payment_rejected' ||
+          o['status'] == 'refunded');
+
+      if (!hasCompleted) return const SizedBox.shrink();
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton.icon(
+              onPressed: () => _confirmClearAll(isSeller),
+              icon: const Icon(Icons.delete_sweep, color: Colors.red),
+              label: const Text('حذف الكل المكتمل',
+                  style: TextStyle(color: Colors.red)),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red.withValues(alpha: 0.05),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  void _confirmDeleteOrder(String orderId) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('حذف الطلب'),
+        content: const Text('هل أنت متأكد من حذف هذا الطلب من السجل؟'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('إلغاء')),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              _ordersController.deleteOrder(orderId);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('حذف', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmClearAll(bool isSeller) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('حذف الجميع'),
+        content:
+            const Text('هل أنت متأكد من حذف جميع الطلبات المكتملة والملغاة؟'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('إلغاء')),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              _ordersController.clearOrders(isSeller);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child:
+                const Text('حذف الكل', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.2),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(icon, color: color, size: 20),
+      ),
+    );
+  }
+
+  void _startChatWithBuyer(Map<String, dynamic> order) {
+    final buyerId = order['userId'];
+    final buyerName = order['buyerName'] ?? 'مشتري';
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (buyerId != null && currentUserId != null) {
+      final String chatId = _ordersController.getChatId(currentUserId, buyerId);
+      Get.toNamed('/chat', arguments: {
+        'chatId': chatId,
+        'otherUserId': buyerId,
+        'otherUserName': buyerName,
+      });
     }
   }
 }

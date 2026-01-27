@@ -344,11 +344,14 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: _buildStatCard(
-              'طلباتي',
-              '$_myOrdersCount',
-              Icons.shopping_bag,
-              Colors.orange,
+            child: GestureDetector(
+              onTap: () => Get.toNamed(AppRoutes.orders),
+              child: _buildStatCard(
+                'طلباتي',
+                '$_myOrdersCount',
+                Icons.shopping_bag,
+                Colors.orange,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -435,6 +438,15 @@ class _ProfilePageState extends State<ProfilePage> {
                   subtitle: 'إدارة المنتجات التي أضفتها',
                   color: AppColors.primary,
                   onTap: () => Get.to(() => const MyProductsPage()),
+                  context: context,
+                ),
+                _buildDivider(),
+                _buildMenuItem(
+                  icon: Icons.shopping_bag,
+                  title: 'طلباتي',
+                  subtitle: 'متابعة المشتريات والطلبات الواردة',
+                  color: Colors.orange,
+                  onTap: () => Get.toNamed(AppRoutes.orders),
                   context: context,
                 ),
                 _buildDivider(),
@@ -807,8 +819,7 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(
             onPressed: () async {
               Get.back();
-              await FirebaseAuth.instance.signOut();
-              Get.offAllNamed(AppRoutes.login);
+              await Get.find<AuthController>().logout();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('تسجيل الخروج'),

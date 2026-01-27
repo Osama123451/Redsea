@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,6 +17,10 @@ class ExperienceSwapController extends GetxController {
       <ExperienceSwapRequest>[].obs;
   final RxBool isLoading = false.obs;
 
+  StreamSubscription? _incomingSub;
+  StreamSubscription? _outgoingSub;
+  StreamSubscription? _authSub;
+
   String? get currentUserId => _auth.currentUser?.uid;
 
   @override
@@ -24,21 +29,37 @@ class ExperienceSwapController extends GetxController {
     if (currentUserId != null) {
       listenToRequests();
     }
-    _auth.authStateChanges().listen((user) {
+    _authSub = _auth.authStateChanges().listen((user) {
       if (user != null) {
         listenToRequests();
       } else {
-        incomingRequests.clear();
-        outgoingRequests.clear();
+        _stopListening();
       }
     });
+  }
+
+  @override
+  void onClose() {
+    _stopListening();
+    _authSub?.cancel();
+    super.onClose();
+  }
+
+  void _stopListening() {
+    _incomingSub?.cancel();
+    _incomingSub = null;
+    _outgoingSub?.cancel();
+    _outgoingSub = null;
+    incomingRequests.clear();
+    outgoingRequests.clear();
   }
 
   void listenToRequests() {
     if (currentUserId == null) return;
 
     // Listen to incoming requests (where the user is the target expert)
-    _dbRef
+    _incomingSub?.cancel();
+    _incomingSub = _dbRef
         .child('experience_swap_requests')
         .orderByChild('targetExpertId')
         .equalTo(currentUserId)
@@ -54,10 +75,13 @@ class ExperienceSwapController extends GetxController {
       }
       requests.sort((a, b) => b.timestamp.compareTo(a.timestamp));
       incomingRequests.value = requests;
+    }, onError: (e) {
+      debugPrint('Error listening to incoming experience swap requests: $e');
     });
 
     // Listen to outgoing requests (where the user is the requester)
-    _dbRef
+    _outgoingSub?.cancel();
+    _outgoingSub = _dbRef
         .child('experience_swap_requests')
         .orderByChild('requesterId')
         .equalTo(currentUserId)
@@ -73,6 +97,8 @@ class ExperienceSwapController extends GetxController {
       }
       requests.sort((a, b) => b.timestamp.compareTo(a.timestamp));
       outgoingRequests.value = requests;
+    }, onError: (e) {
+      debugPrint('Error listening to outgoing experience swap requests: $e');
     });
   }
 
@@ -179,6 +205,40 @@ class ExperienceSwapController extends GetxController {
       'timestamp': ServerValue.timestamp,
       'isRead': false,
     });
+  }
+
+  /// حذف طلب تبادل خبرة معين
+  Future<bool> deleteRequest(String requestId) async {
+    try {
+      await _dbRef.child('experience_swap_requests/$requestId').remove();
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting experience swap request: $e');
+      return false;
+    }
+  }
+
+  /// حذف جميع الطلبات المنتهية (مقبولة، مرفوضة)
+  /// ملاحظة: الخبرات لا تملك حالة "cancelled" حالياً في النموذج لكن نضيفها للاحتياط
+  Future<void> clearRequests(bool isIncoming) async {
+    try {
+      final list = isIncoming ? incomingRequests : outgoingRequests;
+      final toDelete = list
+          .where((r) =>
+              r.status == 'accepted' ||
+              r.status == 'rejected' ||
+              r.status == 'cancelled')
+          .toList();
+
+      for (var request in toDelete) {
+        await deleteRequest(request.id);
+      }
+
+      Get.snackbar('نجاح', 'تم تنظيف قائمة الطلبات');
+    } catch (e) {
+      debugPrint('Error clearing experience swap requests: $e');
+      Get.snackbar('خطأ', 'فشل في تنظيف القائمة');
+    }
   }
 
   /// تحديث رؤية الخبرة (عام/خاص)
