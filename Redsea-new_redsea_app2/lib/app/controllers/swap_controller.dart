@@ -158,21 +158,35 @@ class SwapController extends GetxController {
         loadSwapRequests();
       } else {
         debugPrint('SwapController: Auth state changed. User signed out.');
-        swappableProducts.clear();
-        incomingRequests.clear();
-        outgoingRequests.clear();
+        _stopListeningToSwapRequests();
       }
     });
   }
 
   @override
   void onClose() {
-    _incomingSub?.cancel();
-    _outgoingSub?.cancel();
-    _archivedIncomingSub?.cancel();
-    _archivedOutgoingSub?.cancel();
+    _stopListeningToSwapRequests();
     _authSubscription?.cancel();
     super.onClose();
+  }
+
+  void _stopListeningToSwapRequests() {
+    _incomingSub?.cancel();
+    _incomingSub = null;
+    _outgoingSub?.cancel();
+    _outgoingSub = null;
+    _archivedIncomingSub?.cancel();
+    _archivedIncomingSub = null;
+    _archivedOutgoingSub?.cancel();
+    _archivedOutgoingSub = null;
+
+    swappableProducts.clear();
+    incomingRequests.clear();
+    outgoingRequests.clear();
+    _liveIncoming.clear();
+    _archivedIncoming.clear();
+    _liveOutgoing.clear();
+    _archivedOutgoing.clear();
   }
 
   void _updatePublicIncoming() {
@@ -314,6 +328,8 @@ class SwapController extends GetxController {
         });
       }
       _updatePublicIncoming();
+    }, onError: (e) {
+      debugPrint('Error listening to archived incoming swap requests: $e');
     });
 
     // 4. المقايضات المكتملة (Archived - Outgoing)
@@ -340,6 +356,8 @@ class SwapController extends GetxController {
         });
       }
       _updatePublicOutgoing();
+    }, onError: (e) {
+      debugPrint('Error listening to archived outgoing swap requests: $e');
     });
   }
 
@@ -501,11 +519,7 @@ class SwapController extends GetxController {
         'user2Id': request.targetOwnerId,
         'user1Name': request.requesterName,
         'user2Name': 'صاحب المنتج', // سيتم تحديثه عند الفتح أو جلبه الآن
-        'lastMessage': {
-          'text': 'تم قبول طلب المقايضة لـ ${request.targetProductName}',
-          'senderId': 'system',
-          'timestamp': timestamp,
-        },
+        'lastMessage': 'تم قبول طلب المقايضة لـ ${request.targetProductName}',
         'lastMessageTime': timestamp,
         'isSwapChat': true,
         'swapRequestId': request.id,
@@ -677,6 +691,44 @@ class SwapController extends GetxController {
   /// عدد الطلبات الواردة المعلقة
   int get pendingRequestsCount {
     return incomingRequests.where((r) => r.status == 'pending').length;
+  }
+
+  /// حذف طلب مقايضة معين
+  Future<bool> deleteSwapRequest(String id, {bool isArchived = false}) async {
+    try {
+      if (isArchived) {
+        await _dbRef.child('completed_swaps/$id').remove();
+      } else {
+        await _dbRef.child('swap_requests/$id').remove();
+      }
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting swap request: $e');
+      return false;
+    }
+  }
+
+  /// حذف جميع الطلبات المنتهية (مرفوضة، ملغاة، مكتملة)
+  Future<void> clearSwapRequests(bool isIncoming) async {
+    try {
+      final list = isIncoming ? incomingRequests : outgoingRequests;
+      final toDelete = list
+          .where((r) =>
+              r.status == 'rejected' ||
+              r.status == 'cancelled' ||
+              r.status == 'completed')
+          .toList();
+
+      for (var request in toDelete) {
+        final isArchived = request.status == 'completed';
+        await deleteSwapRequest(request.id, isArchived: isArchived);
+      }
+
+      Get.snackbar('نجاح', 'تم تنظيف قائمة الطلبات');
+    } catch (e) {
+      debugPrint('Error clearing swap requests: $e');
+      Get.snackbar('خطأ', 'فشل في تنظيف القائمة');
+    }
   }
 
   /// تحديث رؤية المنتج (عام/خاص)

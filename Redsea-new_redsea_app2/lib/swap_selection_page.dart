@@ -9,6 +9,9 @@ import 'package:redsea/app/controllers/swap_controller.dart';
 import 'package:redsea/app/bindings/swap_binding.dart';
 import 'package:redsea/app/routes/app_routes.dart';
 import 'package:redsea/add_product_page.dart';
+import 'package:redsea/experiences/add_experience_page.dart';
+import 'package:redsea/models/experience_model.dart';
+import 'package:redsea/app/controllers/experience_swap_controller.dart';
 
 // الصفحة الأولى: اختيار منتج للمقايضة
 class SwapSelectionPage extends StatefulWidget {
@@ -38,6 +41,58 @@ class _SwapSelectionPageState extends State<SwapSelectionPage> {
   Future<void> _loadUserProducts() async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
+
+    if (widget.targetProduct.isService) {
+      final ref = FirebaseDatabase.instance.ref().child('experiences');
+      try {
+        final snapshot =
+            await ref.orderByChild('expert_id').equalTo(userId).once();
+        List<Product> loadedProducts = [];
+
+        if (snapshot.snapshot.value != null) {
+          dynamic data = snapshot.snapshot.value;
+          if (data is Map) {
+            data.forEach((key, value) {
+              try {
+                Experience exp = Experience.fromMap(
+                    key.toString(), Map<String, dynamic>.from(value));
+                if (exp.id != widget.targetProduct.id && exp.isAvailable) {
+                  // Convert Experience to Product for UI compatibility
+                  loadedProducts.add(Product(
+                    id: exp.id,
+                    name: exp.title,
+                    price:
+                        '${exp.experiencePrice ?? exp.consultationPrice ?? 0}',
+                    negotiable: true,
+                    imageUrl: exp.imageUrl,
+                    description: exp.description,
+                    category: exp.category,
+                    dateAdded: exp.createdAt,
+                    ownerId: exp.expertId,
+                    isSwappable: true,
+                    isService: true,
+                  ));
+                }
+              } catch (e) {
+                debugPrint("Error parsing experience: $e");
+              }
+            });
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _userProducts = loadedProducts;
+            _filteredProducts = loadedProducts;
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        debugPrint("Error loading user experiences: $e");
+        if (mounted) setState(() => _isLoading = false);
+      }
+      return;
+    }
 
     final ref = FirebaseDatabase.instance.ref().child('products');
     try {
@@ -119,7 +174,11 @@ class _SwapSelectionPageState extends State<SwapSelectionPage> {
   }
 
   void _addNewProduct() async {
-    await Get.to(() => const AddProductPage());
+    if (widget.targetProduct.isService) {
+      await Get.to(() => const AddExperiencePage());
+    } else {
+      await Get.to(() => const AddProductPage());
+    }
     _loadUserProducts();
   }
 
@@ -323,8 +382,10 @@ class _SwapSelectionPageState extends State<SwapSelectionPage> {
               const SizedBox(height: 8),
               Text(
                 _searchController.text.isEmpty
-                    ? 'يجب أن يكون لديك منتج واحد على الأقل للمقايضة'
-                    : 'لم يتم العثور على منتج مطابق للبحث',
+                    ? (widget.targetProduct.isService
+                        ? 'يجب أن يكون لديك خبرة واحدة على الأقل للمقايضة'
+                        : 'يجب أن يكون لديك منتج واحد على الأقل للمقايضة')
+                    : 'لم يتم العثور على نتيجة مطابقة للبحث',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey.shade500,
@@ -347,7 +408,9 @@ class _SwapSelectionPageState extends State<SwapSelectionPage> {
                       ),
                     ),
                     icon: const Icon(Icons.add),
-                    label: const Text('إضافة منتج جديد'),
+                    label: Text(widget.targetProduct.isService
+                        ? 'إضافة خبرة جديدة'
+                        : 'إضافة منتج جديد'),
                   ),
                 ),
             ],
@@ -530,19 +593,58 @@ class _SwapConfirmationPageState extends State<SwapConfirmationPage> {
     });
 
     try {
-      final swapController = Get.find<SwapController>();
+      bool success = false;
+      if (widget.targetProduct.isService) {
+        final expSwapController = Get.find<ExperienceSwapController>();
 
-      final success = await swapController.sendSwapRequest(
-        targetProduct: widget.targetProduct,
-        offeredProduct: widget.userProduct,
-        message: _messageController.text.trim(),
-        additionalMoney: 0,
-      );
+        // Reconstruct Experiences for the controller
+        final targetExp = Experience(
+          id: widget.targetProduct.id,
+          expertId: widget.targetProduct.ownerId,
+          title: widget.targetProduct.name,
+          expertName: 'صاحب الخبرة',
+          description: widget.targetProduct.description,
+          yearsOfExperience: 0,
+          category: widget.targetProduct.category,
+          createdAt: widget.targetProduct.dateAdded,
+          timestamp: widget.targetProduct.dateAdded.millisecondsSinceEpoch,
+        );
+
+        final offeredExp = Experience(
+          id: widget.userProduct.id,
+          expertId: widget.userProduct.ownerId,
+          title: widget.userProduct.name,
+          expertName: 'أنا',
+          description: widget.userProduct.description,
+          yearsOfExperience: 0,
+          category: widget.userProduct.category,
+          createdAt: widget.userProduct.dateAdded,
+          timestamp: widget.userProduct.dateAdded.millisecondsSinceEpoch,
+        );
+
+        success = await expSwapController.sendSwapRequest(
+          targetExperience: targetExp,
+          offeredExperience: offeredExp,
+          message: _messageController.text.trim(),
+        );
+      } else {
+        final swapController = Get.find<SwapController>();
+        success = await swapController.sendSwapRequest(
+          targetProduct: widget.targetProduct,
+          offeredProduct: widget.userProduct,
+          message: _messageController.text.trim(),
+          additionalMoney: 0,
+        );
+      }
 
       if (success && mounted) {
-        // العودة للصفحة الرئيسية بعد النجاح
+        // العودة لصفحة الطلبات بعد النجاح
         Get.offNamedUntil(AppRoutes.swapRequests, (route) => route.isFirst,
-            arguments: {'initialTabIndex': 1});
+            arguments: {
+              'initialTabIndex': 1,
+              'category':
+                  widget.targetProduct.isService ? 'experiences' : 'products'
+            });
       } else {
         setState(() => _isSending = false);
       }
@@ -608,7 +710,11 @@ class _SwapConfirmationPageState extends State<SwapConfirmationPage> {
     return Column(
       children: [
         // المنتج المستهدف
-        _buildProductCard('المنتج الذي تريده', widget.targetProduct,
+        _buildProductCard(
+            widget.targetProduct.isService
+                ? 'الخبرة التي تريدها'
+                : 'المنتج الذي تريده',
+            widget.targetProduct,
             AppColors.primary.withValues(alpha: 0.1)),
         const SizedBox(height: 16),
 
@@ -625,7 +731,9 @@ class _SwapConfirmationPageState extends State<SwapConfirmationPage> {
 
         // المنتج المعروض
         _buildProductCard(
-            'منتجك المعروض', widget.userProduct, Colors.orange.shade50),
+            widget.userProduct.isService ? 'خبرتك المعروضة' : 'منتجك المعروض',
+            widget.userProduct,
+            Colors.orange.shade50),
       ],
     );
   }

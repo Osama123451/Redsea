@@ -10,6 +10,7 @@ import 'package:redsea/app/controllers/categories_controller.dart';
 import 'package:redsea/app/controllers/filter_controller.dart';
 import 'package:redsea/app/controllers/swap_controller.dart';
 import 'package:redsea/app/controllers/experience_swap_controller.dart';
+import 'package:redsea/app/controllers/orders_controller.dart';
 
 /// الربط الأولي - يُحمّل عند بداية التطبيق
 class InitialBinding extends Bindings {
@@ -78,6 +79,14 @@ class InitialBinding extends Bindings {
       }
     } catch (e) {
       debugPrint('Error initializing ExperienceSwapController: $e');
+    }
+
+    try {
+      if (!Get.isRegistered<OrdersController>()) {
+        Get.put(OrdersController(), permanent: true);
+      }
+    } catch (e) {
+      debugPrint('Error initializing OrdersController: $e');
     }
   }
 }

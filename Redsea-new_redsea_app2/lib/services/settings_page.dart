@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:redsea/login.dart';
 import 'package:get/get.dart';
+import 'package:redsea/app/controllers/auth_controller.dart';
 import 'package:redsea/app/controllers/theme_controller.dart';
 import 'package:redsea/app/core/app_theme.dart';
 import 'package:redsea/auth/mfa_enrollment_page.dart';
@@ -38,13 +37,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _logout() async {
-    await FirebaseAuth.instance.signOut();
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-      );
-    }
+    await Get.find<AuthController>().logout();
   }
 
   void _showLogoutDialog() {
@@ -201,6 +194,11 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(),
 
             // صفحات المعلومات
+            _buildNavigationItem(
+              title: 'طلباتي 📦',
+              icon: Icons.shopping_bag,
+              onTap: () => Get.toNamed('/orders'),
+            ),
             _buildNavigationItem(
               title: 'تقاريري 📊',
               icon: Icons.bar_chart,

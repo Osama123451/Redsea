@@ -90,6 +90,7 @@
       }
     },
     "orders": {
+      ".read": "auth != null",
       ".indexOn": [
         "buyerId",
         "sellerId",
@@ -363,6 +364,7 @@
       }
     },
     "service_orders": {
+      ".read": "auth != null",
       ".indexOn": [
         "buyerId",
         "sellerId",

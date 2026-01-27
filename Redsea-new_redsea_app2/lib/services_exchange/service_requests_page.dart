@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:redsea/app/controllers/service_controller.dart';
 import 'package:redsea/app/core/app_theme.dart';
 import 'package:redsea/models/service_model.dart';
+import 'package:redsea/app/ui/pages/profile/public_profile_page.dart';
 
 /// صفحة طلبات تبادل الخدمات
 class ServiceRequestsPage extends StatefulWidget {
@@ -85,8 +86,18 @@ class _ServiceRequestsPageState extends State<ServiceRequestsPage>
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildRequestsList(isIncoming: true),
-          _buildRequestsList(isIncoming: false),
+          Column(
+            children: [
+              _buildDeleteAllHeader(isIncoming: true),
+              Expanded(child: _buildRequestsList(isIncoming: true)),
+            ],
+          ),
+          Column(
+            children: [
+              _buildDeleteAllHeader(isIncoming: false),
+              Expanded(child: _buildRequestsList(isIncoming: false)),
+            ],
+          ),
         ],
       ),
     );
@@ -155,21 +166,33 @@ class _ServiceRequestsPageState extends State<ServiceRequestsPage>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: request.statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  request.statusText,
-                  style: TextStyle(
-                    color: request.statusColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+              Row(
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: request.statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      request.statusText,
+                      style: TextStyle(
+                        color: request.statusColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
-                ),
+                  if (request.status == 'accepted' ||
+                      request.status == 'rejected' ||
+                      request.status == 'cancelled')
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline,
+                          color: Colors.red, size: 20),
+                      onPressed: () => _confirmDeleteRequest(request.id),
+                    ),
+                ],
               ),
               Container(
                 padding: const EdgeInsets.all(8),
@@ -244,9 +267,22 @@ class _ServiceRequestsPageState extends State<ServiceRequestsPage>
                 style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
               ),
               if (isIncoming)
-                Text(
-                  'من: ${request.requesterName}',
-                  style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+                GestureDetector(
+                  onTap: () {
+                    if (request.requesterId.isNotEmpty) {
+                      Get.to(
+                          () => PublicProfilePage(userId: request.requesterId));
+                    }
+                  },
+                  child: Text(
+                    'من: ${request.requesterName}',
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -447,5 +483,80 @@ class _ServiceRequestsPageState extends State<ServiceRequestsPage>
     if (diff.inHours < 24) return 'منذ ${diff.inHours} ساعة';
     if (diff.inDays < 7) return 'منذ ${diff.inDays} يوم';
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+  }
+
+  Widget _buildDeleteAllHeader({required bool isIncoming}) {
+    return Obx(() {
+      final list = isIncoming
+          ? controller.incomingRequests
+          : controller.outgoingRequests;
+      final hasCompleted = list.any((r) =>
+          r.status == 'accepted' ||
+          r.status == 'rejected' ||
+          r.status == 'cancelled');
+
+      if (!hasCompleted) return const SizedBox.shrink();
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton.icon(
+              onPressed: () => _confirmClearAll(isIncoming),
+              icon: const Icon(Icons.delete_sweep, color: Colors.red),
+              label: const Text('حذف الكل المنتهي',
+                  style: TextStyle(color: Colors.red)),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red.withValues(alpha: 0.05),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  void _confirmDeleteRequest(String id) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('حذف الطلب'),
+        content: const Text('هل أنت متأكد من حذف هذا الطلب؟'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('إلغاء')),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              controller.deleteSwapRequest(id);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('حذف', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmClearAll(bool isIncoming) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('حذف الجميع'),
+        content: const Text('هل أنت متأكد من حذف جميع الطلبات المنتهية؟'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('إلغاء')),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              controller.clearSwapRequests(isIncoming);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child:
+                const Text('حذف الكل', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -529,7 +529,16 @@ class _ChatListPageState extends State<ChatListPage>
                 future: controller.getUserName(otherUserId),
                 builder: (context, snapshot) {
                   final userName = snapshot.data ?? "جار التحميل...";
-                  final lastMsgRaw = chat['lastMessage'] ?? '';
+                  final dynamic rawMsg = chat['lastMessage'];
+                  String lastMsgRaw = "";
+
+                  if (rawMsg is String) {
+                    lastMsgRaw = rawMsg;
+                  } else if (rawMsg is Map) {
+                    // معالجة الحالة التي يكون فيها الحقل كائن (Map)
+                    lastMsgRaw = rawMsg['text']?.toString() ?? "";
+                  }
+
                   final lastMessage = lastMsgRaw.isNotEmpty
                       ? EncryptionService.decrypt(lastMsgRaw)
                       : "لا توجد رسائل بعد";

@@ -231,13 +231,15 @@ class NotificationsController extends GetxController {
     required String title,
     required String message,
     String type = 'general',
+    String? toUserId,
     Map<String, dynamic>? data,
   }) async {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return;
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    final targetUserId = toUserId ?? currentUid;
+    if (targetUserId == null) return;
 
     try {
-      final newRef = _notificationsRef.child(userId).push();
+      final newRef = _notificationsRef.child(targetUserId).push();
       await newRef.set({
         'title': title,
         'message': message,

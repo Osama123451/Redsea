@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:redsea/app/controllers/service_controller.dart';
 import 'package:redsea/app/core/app_theme.dart';
-import 'package:redsea/models/service_model.dart';
+import 'package:redsea/app/ui/pages/profile/public_profile_page.dart';
 
 /// صفحة إدارة طلبات الخدمات (الواردة والصادرة)
 class ServiceOrdersPage extends StatefulWidget {
@@ -21,7 +21,8 @@ class _ServiceOrdersPageState extends State<ServiceOrdersPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _controller.loadSwapRequests();
+    _controller.loadServiceOrders();
+    _controller.loadSellerServiceOrders();
   }
 
   @override
@@ -35,7 +36,7 @@ class _ServiceOrdersPageState extends State<ServiceOrdersPage>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('طلبات الخدمات'),
+        title: const Text('طلبات الشراء (خدمات)'),
         centerTitle: true,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
@@ -49,9 +50,9 @@ class _ServiceOrdersPageState extends State<ServiceOrdersPage>
               child: Obx(() => Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('الواردة'),
-                      if (_controller.incomingRequests
-                          .where((r) => r.status == 'pending')
+                      const Text('طلبات واردة'),
+                      if (_controller.sellerServiceOrders
+                          .where((o) => o['status'] == 'pending_payment')
                           .isNotEmpty) ...[
                         const SizedBox(width: 8),
                         Container(
@@ -62,7 +63,7 @@ class _ServiceOrdersPageState extends State<ServiceOrdersPage>
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            '${_controller.incomingRequests.where((r) => r.status == 'pending').length}',
+                            '${_controller.sellerServiceOrders.where((o) => o['status'] == 'pending_payment').length}',
                             style: const TextStyle(
                                 fontSize: 11, fontWeight: FontWeight.bold),
                           ),
@@ -71,47 +72,64 @@ class _ServiceOrdersPageState extends State<ServiceOrdersPage>
                     ],
                   )),
             ),
-            const Tab(text: 'الصادرة'),
+            const Tab(text: 'طلباتي'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildRequestsList(isIncoming: true),
-          _buildRequestsList(isIncoming: false),
+          Column(
+            children: [
+              _buildDeleteAllHeader(isSeller: true),
+              Expanded(child: _buildOrdersList(isSeller: true)),
+            ],
+          ),
+          Column(
+            children: [
+              _buildDeleteAllHeader(isSeller: false),
+              Expanded(child: _buildOrdersList(isSeller: false)),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRequestsList({required bool isIncoming}) {
+  Widget _buildOrdersList({required bool isSeller}) {
     return Obx(() {
-      final requests = isIncoming
-          ? _controller.incomingRequests
-          : _controller.outgoingRequests;
+      final orders = isSeller
+          ? _controller.sellerServiceOrders
+          : _controller.serviceOrders;
 
-      if (requests.isEmpty) {
-        return _buildEmptyState(isIncoming);
+      if (orders.isEmpty) {
+        return _buildEmptyState(isSeller);
       }
 
       return RefreshIndicator(
-        onRefresh: () => _controller.loadSwapRequests(),
+        onRefresh: () async {
+          await _controller.loadServiceOrders();
+          await _controller.loadSellerServiceOrders();
+        },
         child: ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: requests.length,
+          itemCount: orders.length,
           itemBuilder: (context, index) {
-            return _buildRequestCard(requests[index], isIncoming);
+            return _buildOrderCard(orders[index], isSeller);
           },
         ),
       );
     });
   }
 
-  Widget _buildRequestCard(ServiceSwapRequest request, bool isIncoming) {
-    final statusColor = _getStatusColor(request.status);
-    final statusText = _getStatusText(request.status);
-    final statusIcon = _getStatusIcon(request.status);
+  Widget _buildOrderCard(Map<String, dynamic> order, bool isSeller) {
+    final status = order['status'] ?? 'pending_payment';
+    final statusColor = _getStatusColor(status);
+    final statusText = _getStatusText(status);
+    final statusIcon = _getStatusIcon(status);
+    final createdAt = order['createdAt'] != null
+        ? DateTime.fromMillisecondsSinceEpoch(order['createdAt'])
+        : DateTime.now();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -128,7 +146,7 @@ class _ServiceOrdersPageState extends State<ServiceOrdersPage>
       ),
       child: Column(
         children: [
-          // الهيدر
+          // Header
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -138,7 +156,6 @@ class _ServiceOrdersPageState extends State<ServiceOrdersPage>
             ),
             child: Row(
               children: [
-                // الحالة
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -162,158 +179,102 @@ class _ServiceOrdersPageState extends State<ServiceOrdersPage>
                     ],
                   ),
                 ),
+                if (status == 'completed' || status == 'cancelled')
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline,
+                        color: Colors.red, size: 20),
+                    onPressed: () => _confirmDeleteOrder(order['id']),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
                 const Spacer(),
-                // التاريخ
                 Text(
-                  _formatDate(request.timestamp),
+                  _formatDate(createdAt),
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
               ],
             ),
           ),
 
-          // المحتوى
+          // Content
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // معلومات الطالب/المستلم
-                Row(
-                  children: [
-                    const Icon(Icons.swap_horiz, color: AppColors.primary),
-                    const Spacer(),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          isIncoming ? request.requesterName : 'أنت',
+                GestureDetector(
+                  onTap: () {
+                    if (isSeller && order['buyerId'] != null) {
+                      Get.to(() => PublicProfilePage(userId: order['buyerId']));
+                    }
+                  },
+                  child: Row(
+                    children: [
+                      const Icon(Icons.shopping_cart, color: AppColors.primary),
+                      const Spacer(),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            isSeller ? (order['buyerName'] ?? 'مشتري') : 'أنت',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                          Text(
+                            isSeller ? 'قام بشراء خدمتك' : 'قمت بشراء خدمة',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 10),
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundColor:
+                            AppColors.primary.withValues(alpha: 0.2),
+                        child: Text(
+                          isSeller ? (order['buyerName']?[0] ?? 'م') : 'أ',
                           style: const TextStyle(
+                            color: AppColors.primary,
                             fontWeight: FontWeight.bold,
-                            fontSize: 14,
                           ),
-                        ),
-                        Text(
-                          isIncoming ? 'يريد التبادل معك' : 'طلبت التبادل',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 10),
-                    CircleAvatar(
-                      radius: 22,
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.2),
-                      child: Text(
-                        isIncoming ? request.requesterName[0] : 'أ',
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-
                 const Divider(height: 24),
-
-                // الخدمات المتبادلة
-                Row(
-                  children: [
-                    // خدمتي
-                    Expanded(
-                      child: _buildServicePreview(
-                        title: isIncoming
-                            ? request.targetServiceTitle
-                            : request.requesterServiceTitle,
-                        label: 'خدمتي',
-                        color: Colors.blue,
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.swap_horiz, color: Colors.grey),
-                    ),
-                    // خدمتهم
-                    Expanded(
-                      child: _buildServicePreview(
-                        title: isIncoming
-                            ? request.requesterServiceTitle
-                            : request.targetServiceTitle,
-                        label: isIncoming ? 'يعرض عليك' : 'تريد',
-                        color: Colors.green,
-                      ),
-                    ),
-                  ],
+                Text(
+                  order['serviceTitle'] ?? 'خدمة',
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.right,
                 ),
-
-                // الرسالة
-                if (request.message.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Container(
+                const SizedBox(height: 8),
+                Text(
+                  'السعر: ${order['price']} ريال',
+                  style: const TextStyle(
+                      color: AppColors.primary, fontWeight: FontWeight.bold),
+                ),
+                if (status == 'pending_payment' && isSeller) ...[
+                  const SizedBox(height: 16),
+                  SizedBox(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      request.message,
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontSize: 13,
+                    child: ElevatedButton(
+                      onPressed: () => _confirmPayment(order['id']),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
                       ),
-                      textAlign: TextAlign.right,
+                      child: const Text('تأكيد استلام المبلغ'),
                     ),
                   ),
-                ],
-
-                // أزرار الإجراءات
-                if (request.status == 'pending') ...[
-                  const SizedBox(height: 16),
-                  if (isIncoming)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => _showRejectDialog(request),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red,
-                              side: const BorderSide(color: Colors.red),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            child: const Text('رفض'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => _acceptRequest(request),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            child: const Text('قبول'),
-                          ),
-                        ),
-                      ],
-                    )
-                  else
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () => _cancelRequest(request),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          side: const BorderSide(color: Colors.red),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: const Text('إلغاء الطلب'),
-                      ),
-                    ),
                 ],
               ],
             ),
@@ -323,40 +284,7 @@ class _ServiceOrdersPageState extends State<ServiceOrdersPage>
     );
   }
 
-  Widget _buildServicePreview({
-    required String title,
-    required String label,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-                color: color, fontSize: 10, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(bool isIncoming) {
+  Widget _buildEmptyState(bool isSeller) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
@@ -370,27 +298,19 @@ class _ServiceOrdersPageState extends State<ServiceOrdersPage>
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isIncoming ? Icons.inbox : Icons.outbox,
+                isSeller ? Icons.inbox : Icons.shopping_basket,
                 size: 60,
                 color: Colors.grey.shade400,
               ),
             ),
             const SizedBox(height: 24),
             Text(
-              isIncoming ? 'لا توجد طلبات واردة' : 'لا توجد طلبات صادرة',
+              isSeller ? 'لا توجد طلبات واردة' : 'لم تقم بأي طلبات شراء',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey.shade600,
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              isIncoming
-                  ? 'ستظهر هنا طلبات التبادل من المستخدمين الآخرين'
-                  : 'ستظهر هنا طلبات التبادل التي أرسلتها',
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -400,14 +320,16 @@ class _ServiceOrdersPageState extends State<ServiceOrdersPage>
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'pending':
+      case 'pending_payment':
         return Colors.orange;
-      case 'accepted':
+      case 'payment_confirmed':
+      case 'in_progress':
+        return Colors.blue;
+      case 'completed':
         return Colors.green;
+      case 'cancelled':
       case 'rejected':
         return Colors.red;
-      case 'cancelled':
-        return Colors.grey;
       default:
         return Colors.blue;
     }
@@ -415,14 +337,18 @@ class _ServiceOrdersPageState extends State<ServiceOrdersPage>
 
   String _getStatusText(String status) {
     switch (status) {
-      case 'pending':
-        return 'قيد الانتظار';
-      case 'accepted':
-        return 'مقبول';
-      case 'rejected':
-        return 'مرفوض';
+      case 'pending_payment':
+        return 'في انتظار الدفع';
+      case 'payment_confirmed':
+        return 'تمت عملية الدفع';
+      case 'in_progress':
+        return 'قيد التنفيذ';
+      case 'completed':
+        return 'مكتمل';
       case 'cancelled':
         return 'ملغي';
+      case 'rejected':
+        return 'مرفوض';
       default:
         return status;
     }
@@ -456,72 +382,101 @@ class _ServiceOrdersPageState extends State<ServiceOrdersPage>
     }
   }
 
-  Future<void> _acceptRequest(ServiceSwapRequest request) async {
-    await _controller.acceptSwapRequest(request);
-  }
-
-  void _showRejectDialog(ServiceSwapRequest request) {
-    final reasonController = TextEditingController();
-    Get.dialog(
-      AlertDialog(
-        title: const Text('رفض الطلب', textAlign: TextAlign.center),
-        content: TextField(
-          controller: reasonController,
-          textAlign: TextAlign.right,
-          maxLines: 2,
-          decoration: InputDecoration(
-            hintText: 'سبب الرفض (اختياري)',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('إلغاء'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Get.back();
-              await _controller.rejectSwapRequest(
-                request,
-                reason: reasonController.text.trim(),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('رفض'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _cancelRequest(ServiceSwapRequest request) async {
+  Future<void> _confirmPayment(String orderId) async {
     final confirm = await Get.dialog<bool>(
       AlertDialog(
-        title: const Text('إلغاء الطلب', textAlign: TextAlign.center),
-        content: const Text('هل أنت متأكد من إلغاء هذا الطلب؟'),
+        title: const Text('تأكيد استلام المبلغ'),
+        content: const Text('هل أنت متأكد من استلام المبلغ بالكامل؟'),
         actions: [
           TextButton(
-            onPressed: () => Get.back(result: false),
-            child: const Text('لا'),
-          ),
+              onPressed: () => Get.back(result: false),
+              child: const Text('لا')),
           ElevatedButton(
             onPressed: () => Get.back(result: true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('نعم، إلغاء'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text('نعم، تأكيد'),
           ),
         ],
       ),
     );
 
     if (confirm == true) {
-      await _controller.cancelSwapRequest(request);
+      await _controller.confirmServicePayment(orderId);
     }
+  }
+
+  Widget _buildDeleteAllHeader({required bool isSeller}) {
+    return Obx(() {
+      final list = isSeller
+          ? _controller.sellerServiceOrders
+          : _controller.serviceOrders;
+      final hasCompleted = list.any((o) =>
+          o['status'] == 'completed' ||
+          o['status'] == 'cancelled' ||
+          o['status'] == 'rejected');
+
+      if (!hasCompleted) return const SizedBox.shrink();
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton.icon(
+              onPressed: () => _confirmClearAll(isSeller),
+              icon: const Icon(Icons.delete_sweep, color: Colors.red),
+              label: const Text('حذف الكل المنتهي',
+                  style: TextStyle(color: Colors.red)),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red.withValues(alpha: 0.05),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  void _confirmDeleteOrder(String id) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('حذف الطلب'),
+        content: const Text('هل أنت متأكد من حذف هذا الطلب من القائمة؟'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('إلغاء')),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              _controller.deleteServiceOrder(id);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('حذف', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmClearAll(bool isSeller) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('حذف الجميع'),
+        content: const Text('هل أنت متأكد من حذف جميع الطلبات المنتهية؟'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('إلغاء')),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              _controller.clearServiceOrders(isSeller);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child:
+                const Text('حذف الكل', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 }
